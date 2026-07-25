@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>MM Daily — Kubah Emas</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#C2185B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MM Daily">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --yl:#F5C518;--yl-d:#C89B00;--yl-l:#FFF9E0;--yl-b:#FFE066;
+  --ch:#1C1E26;--ch2:#252830;--ch3:#2D3142;
+  --bg:#F4F3EE;--bg2:#ECEAE2;--card:#FFFFFF;
+  --txt:#1C1E26;--txt2:#3A3D4A;--mut:#7A7E8A;
+  --bdr:#E0DDD4;--bdr2:#D0CEC4;
+  --grn:#16A34A;--grn-l:#F0FDF4;--grn-d:#15803D;
+  --red:#DC2626;--red-l:#FEF2F2;
+  --shd:0 2px 12px rgba(0,0,0,.07);--shd2:0 6px 28px rgba(0,0,0,.13);
+  --font:'Poppins',-apple-system,sans-serif;--r:16px;
+}
+body.dark{
+  --bg:#131418;--bg2:#1C1E26;--card:#1E2028;
+  --txt:#F0EFE8;--txt2:#B0AEA0;--mut:#5A5E6A;
+  --bdr:#2A2C38;--bdr2:#343642;
+  --shd:0 2px 12px rgba(0,0,0,.5);--shd2:0 8px 32px rgba(0,0,0,.6);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;max-width:480px;margin:0 auto;transition:background .25s,color .25s;padding-bottom:env(safe-area-inset-bottom)}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--ch);padding:env(safe-area-inset-top) 20px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.35)}
+body.dark .topbar{background:#0A0B0E}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;height:54px}
+.app-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--yl);opacity:.9}
+.topbar-r{display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:15px}
+.icon-btn:hover{border-color:var(--yl);color:var(--yl)}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ── GREETING BLOCK ── */
+.greeting-block{padding:20px 20px 0}
+.greeting-date{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.greeting-msg{font-size:20px;font-weight:800;color:var(--txt);line-height:1.25}
+.greeting-msg span{color:var(--yl)}
+
+/* ── PROGRESS HERO ── */
+.hero{padding:20px 20px 0;display:flex;align-items:center;gap:20px}
+.ring-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--bdr2);stroke-width:9}
+.ring-fg{fill:none;stroke:var(--yl);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.34,1.56,.64,1)}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-size:22px;font-weight:900;color:var(--txt);line-height:1}
+.ring-sub{font-size:10px;font-weight:600;color:var(--mut);margin-top:1px}
+.hero-info{flex:1}
+.streak-badge{display:inline-flex;align-items:center;gap:5px;background:var(--yl-l);border:1.5px solid var(--yl-b);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--yl-d);margin-bottom:10px}
+body.dark .streak-badge{background:#2A2200;border-color:#5A4500;color:#FFD840}
+.streak-badge .ico{font-size:14px}
+.hero-title{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:2px}
+.hero-desc{font-size:11.5px;color:var(--mut);line-height:1.5}
+.all-done-msg{font-size:12px;font-weight:700;color:var(--grn);margin-top:6px;display:none}
+
+/* ── SECTION ── */
+.main{padding:18px 20px 30px}
+.section{margin-bottom:18px}
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec-ico{font-size:16px;flex-shrink:0}
+.sec-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.13em;color:var(--mut)}
+.sec-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:20px}
+.sec-badge.done{background:var(--grn-l);color:var(--grn-d);border:1px solid #BBF7D0}
+.sec-badge.partial{background:var(--yl-l);color:var(--yl-d);border:1px solid var(--yl-b)}
+.sec-badge.empty{background:var(--bg2);color:var(--mut);border:1px solid var(--bdr)}
+body.dark .sec-badge.done{background:#052E16;border-color:#14532D;color:#4ADE80}
+body.dark .sec-badge.partial{background:#2A2200;border-color:#5A4500;color:#FFD840}
+
+/* ── TASK ITEMS ── */
+.task-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shd);border:1px solid var(--bdr);overflow:hidden}
+body.dark .task-card{background:var(--card);border-color:var(--bdr)}
+.task-item{display:flex;align-items:flex-start;gap:12px;padding:13px 15px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent;position:relative}
+.task-item:last-child{border-bottom:none}
+.task-item:active{background:var(--bg2)}
+.task-item.done{opacity:.55}
+.task-cb{width:22px;height:22px;border-radius:7px;border:2px solid var(--bdr2);background:transparent;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative;overflow:hidden}
+.task-item.done .task-cb{background:var(--yl);border-color:var(--yl)}
+.task-cb svg{width:13px;height:13px;stroke:#1C1E26;stroke-width:2.5;fill:none;stroke-linecap:round;opacity:0;transform:scale(.5);transition:all .2s}
+.task-item.done .task-cb svg{opacity:1;transform:scale(1)}
+.task-body{flex:1;min-width:0}
+.task-label{font-size:13px;font-weight:600;color:var(--txt);line-height:1.35;transition:color .2s}
+.task-item.done .task-label{text-decoration:line-through;color:var(--mut)}
+.task-detail{font-size:11px;color:var(--mut);line-height:1.55;margin-top:3px;display:none}
+.task-item.expanded .task-detail{display:block}
+.task-arrow{font-size:11px;color:var(--mut);margin-top:2px;transition:transform .2s;flex-shrink:0}
+.task-item.expanded .task-arrow{transform:rotate(180deg)}
+
+/* ── WEEKLY TAG ── */
+.weekly-tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:1px 7px;border-radius:4px;background:var(--ch);color:var(--yl);margin-bottom:3px;vertical-align:middle}
+body.dark .weekly-tag{background:#F5C518;color:#1C1E26}
+
+/* ── MONTHLY SECTION ── */
+.monthly-toggle{display:flex;align-items:center;gap:8px;padding:11px 15px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.monthly-toggle-label{font-size:13px;font-weight:600;color:var(--txt);flex:1}
+.monthly-toggle-ico{font-size:12px;color:var(--mut);transition:transform .2s}
+.monthly-open .monthly-toggle-ico{transform:rotate(180deg)}
+.monthly-body{display:none}
+.monthly-open .monthly-body{display:block;border-top:1px solid var(--bdr)}
+.monthly-prog{height:3px;background:var(--bdr2);border-radius:99px;margin:0 15px 0;overflow:hidden}
+.monthly-prog-fill{height:100%;background:var(--yl);border-radius:99px;transition:width .4s}
+
+/* ── EMERGENCY ── */
+.emergency{background:var(--red-l);border:1.5px solid #FECACA;border-radius:var(--r);padding:14px 15px;margin-bottom:18px}
+body.dark .emergency{background:#1A0404;border-color:#7F1D1D}
+.emergency-head{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.emergency-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--red)}
+body.dark .emergency-title{color:#F87171}
+.emergency-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;font-size:11.5px;color:var(--txt2);line-height:1.55}
+.emergency-item:last-child{margin-bottom:0}
+.emergency-item::before{content:'❌';flex-shrink:0;font-size:12px;margin-top:1px}
+
+/* ── HISTORY ── */
+.history-row{display:flex;align-items:center;gap:8px;padding:8px 15px;border-bottom:1px solid var(--bdr);font-size:12px}
+.history-row:last-child{border-bottom:none}
+.history-date{color:var(--mut);font-size:11px;font-weight:500;min-width:60px}
+.history-bar-wrap{flex:1;height:6px;background:var(--bdr2);border-radius:99px;overflow:hidden}
+.history-bar{height:100%;border-radius:99px;transition:width .4s}
+.history-pct{font-size:11px;font-weight:700;min-width:32px;text-align:right}
+
+/* ── REST DAY ── */
+.rest-day{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 30px}
+.rest-ico{font-size:60px;margin-bottom:20px}
+.rest-title{font-size:22px;font-weight:800;color:var(--txt);margin-bottom:8px}
+.rest-sub{font-size:13px;color:var(--mut);line-height:1.6}
+.rest-streak{margin-top:20px;background:var(--yl-l);border:1.5px solid var(--yl-b);border-radius:20px;padding:8px 20px;font-size:13px;font-weight:700;color:var(--yl-d)}
+body.dark .rest-streak{background:#2A2200;border-color:#5A4500;color:#FFD840}
+
+/* ── CELEBRATE ── */
+#celebrate{position:fixed;inset:0;pointer-events:none;z-index:999;display:none}
+#celebrate canvas{width:100%;height:100%}
+.celebrate-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--ch);color:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;padding:12px 22px;border-radius:30px;box-shadow:var(--shd2);z-index:1000;display:none;white-space:nowrap;letter-spacing:.03em}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-top:1px solid var(--bdr);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+body.dark .bottom-nav{background:#13141A;box-shadow:0 -4px 20px rgba(0,0,0,.4)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 0 8px;cursor:pointer;border:none;background:none;font-family:var(--font);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.nav-ico{font-size:20px;opacity:.45;transition:all .15s}
+.nav-lbl{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);transition:all .15s}
+.nav-btn.active .nav-ico{opacity:1}
+.nav-btn.active .nav-lbl{color:var(--yl-d)}
+body.dark .nav-btn.active .nav-lbl{color:var(--yl)}
+/* push content above nav */
+body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+
+/* ── PROGRESS TAB ── */
+.prog-tab{display:none;padding:0 0 30px}
+.prog-tab.active{display:block}
+
+/* Streak hero */
+.streak-hero{background:linear-gradient(135deg,var(--ch),var(--ch2));border-radius:0 0 28px 28px;padding:22px 24px 28px;margin-bottom:20px;text-align:center}
+body.dark .streak-hero{background:linear-gradient(135deg,#0A0B0F,#131418)}
+.streak-fire{font-size:52px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 4px 12px rgba(245,197,24,.5))}
+.streak-num{font-size:56px;font-weight:900;color:var(--yl);line-height:1;letter-spacing:-.02em}
+.streak-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-top:4px;margin-bottom:16px}
+.streak-stats-row{display:flex;gap:12px;justify-content:center}
+.streak-stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 16px;text-align:center;min-width:80px}
+.streak-stat-val{font-size:18px;font-weight:800;color:#fff;display:block}
+.streak-stat-lbl{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;display:block;margin-top:2px}
+
+/* Heatmap */
+.heat-section{padding:0 20px;margin-bottom:20px}
+.heat-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.heat-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.heat-cell{aspect-ratio:1;border-radius:4px;cursor:pointer;transition:transform .1s;position:relative}
+.heat-cell:active{transform:scale(.88)}
+.heat-cell[title]{cursor:default}
+.heat-0{background:var(--bdr2)}
+.heat-low{background:#F5C51850}
+.heat-mid{background:#F5C51899}
+.heat-high{background:#F5C518}
+.heat-full{background:var(--grn)}
+.heat-future{background:var(--bg2);opacity:.4}
+.heat-legend{display:flex;align-items:center;gap:6px;margin-top:8px;justify-content:flex-end;font-size:10px;color:var(--mut)}
+.heat-legend-cells{display:flex;gap:3px}
+.heat-legend-cell{width:11px;height:11px;border-radius:3px}
+
+/* Month stats */
+.month-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 20px;margin-bottom:20px}
+.mstat-card{background:var(--card);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shd);border:1px solid var(--bdr)}
+.mstat-val{font-size:24px;font-weight:900;color:var(--txt);margin-bottom:2px}
+.mstat-lbl{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.07em}
+
+/* Bar chart — weekly avg */
+.bar-section{padding:0 20px;margin-bottom:20px}
+.bar-chart{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shd);border:1px solid var(--bdr)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-row:last-child{margin-bottom:0}
+.bar-day{font-size:10.5px;font-weight:600;color:var(--mut);min-width:32px}
+.bar-track{flex:1;height:22px;background:var(--bdr2);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:700;color:#1C1E26;white-space:nowrap;transition:width .5s cubic-bezier(.34,1.56,.64,1);min-width:0}
+.bar-pct{font-size:10.5px;font-weight:700;min-width:32px;text-align:right;color:var(--txt)}
+
+/* Responsive */
+@media(max-width:380px){.streak-num{font-size:46px}.month-stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="app-label">MM Daily</span>
+    <div class="topbar-r">
+      <button class="icon-btn" id="btn-history" title="Riwayat">
+        <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="9"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" title="Pengaturan">⚙️</button>
+      <button class="icon-btn" id="btn-theme" title="Ganti tema">🌙</button>
+    </div>
+  </div>
+</header>
+
+<!-- REST DAY (Minggu) -->
+<div class="rest-day" id="rest-day">
+  <div class="rest-ico">☀️</div>
+  <div class="rest-title">Hari Istirahat</div>
+  <div class="rest-sub">Hari Minggu bukan hari kerja.<br>Istirahat yang cukup, besok Senin kita gas lagi.</div>
+  <div class="rest-streak" id="rest-streak-text">🔥 0 hari streak</div>
+</div>
+
+<!-- MAIN APP (Senin–Sabtu) -->
+<div id="app" style="display:none">
+
+  <div class="greeting-block">
+    <div class="greeting-date" id="greeting-date">—</div>
+    <div class="greeting-msg" id="greeting-msg">Selamat pagi, <span>Manager!</span></div>
+  </div>
+
+  <div class="hero">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 110 110" width="110" height="110">
+        <circle class="ring-bg" cx="55" cy="55" r="46"/>
+        <circle class="ring-fg" id="ring-fg" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+      </svg>
+      <div class="ring-inner">
+        <span class="ring-pct" id="ring-pct">0%</span>
+        <span class="ring-sub" id="ring-sub">0 / 0</span>
+      </div>
+    </div>
+    <div class="hero-info">
+      <div class="streak-badge"><span class="ico">🔥</span><span id="streak-text">0 hari streak</span></div>
+      <div class="hero-title" id="hero-title">Mulai hari ini!</div>
+      <div class="hero-desc" id="hero-desc">Selesaikan semua task hari ini untuk menjaga streak kamu.</div>
+      <div class="all-done-msg" id="all-done-msg">✅ Semua selesai! Luar biasa hari ini.</div>
+    </div>
+  </div>
+
+  <div class="main" id="main-content">
+    <!-- Rendered by JS -->
+  </div>
+
+</div>
+
+<!-- HISTORY PANEL -->
+<div id="history-panel" style="display:none;padding:0 20px 30px">
+  <div style="font-size:14px;font-weight:700;color:var(--txt);padding:16px 0 10px">Riwayat 14 Hari Terakhir</div>
+  <div class="task-card" id="history-list"></div>
+  <button onclick="document.getElementById('history-panel').style.display='none';document.getElementById('app').style.display=''" style="margin-top:14px;width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:13px;font-weight:600;color:var(--txt);cursor:pointer">← Kembali</button>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settings-panel" style="display:none;padding:0 20px 30px">
+  <div style="font-size:14px;font-weight:700;color:var(--txt);padding:16px 0 10px">Pengaturan</div>
+  <div id="settings-body"></div>
+  <button onclick="document.getElementById('settings-panel').style.display='none';document.getElementById('app').style.display=''" style="margin-top:14px;width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:13px;font-weight:600;color:var(--txt);cursor:pointer">← Kembali</button>
+</div>
+
+<!-- CELEBRATE -->
+<div id="celebrate"><canvas id="confetti-canvas"></canvas></div>
+<div class="celebrate-toast" id="celebrate-toast">🎉 100% — Hari ini selesai sempurna!</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-checklist" onclick="switchTab('checklist')">
+    <span class="nav-ico">✅</span>
+    <span class="nav-lbl">Checklist</span>
+  </button>
+  <button class="nav-btn" id="nav-progress" onclick="switchTab('progress')">
+    <span class="nav-ico">📊</span>
+    <span class="nav-lbl">Progress</span>
+  </button>
+</nav>
+
+<!-- PROGRESS TAB -->
+<div class="prog-tab" id="tab-progress">
+
+  <!-- Streak Hero -->
+  <div class="streak-hero">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-num" id="p-streak-num">0</div>
+    <div class="streak-label">hari berturut-turut selesai 100%</div>
+    <div class="streak-stats-row">
+      <div class="streak-stat">
+        <span class="streak-stat-val" id="p-best">0</span>
+        <span class="streak-stat-lbl">Best Streak</span>
+      </div>
+      <div class="streak-stat">
+        <span class="streak-stat-val" id="p-avg">0%</span>
+        <span class="streak-stat-lbl">Rata-rata</span>
+      </div>
+      <div class="streak-stat">
+        <span class="streak-stat-val" id="p-perfect">0</span>
+        <span class="streak-stat-lbl">Hari 100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heatmap 10 minggu -->
+  <div class="heat-section">
+    <div class="heat-title">Konsistensi 10 Minggu Terakhir</div>
+    <div class="heat-grid" id="heat-grid"></div>
+    <div class="heat-legend">
+      <span>Kurang</span>
+      <div class="heat-legend-cells">
+        <div class="heat-legend-cell heat-0"></div>
+        <div class="heat-legend-cell heat-low"></div>
+        <div class="heat-legend-cell heat-mid"></div>
+        <div class="heat-legend-cell heat-high"></div>
+        <div class="heat-legend-cell heat-full"></div>
+      </div>
+      <span>100%</span>
+    </div>
+  </div>
+
+  <!-- Month Stats -->
+  <div class="month-stats">
+    <div class="mstat-card">
+      <div class="mstat-val" id="p-month-done" style="color:var(--grn)">0</div>
+      <div class="mstat-lbl">Hari selesai<br>bulan ini</div>
+    </div>
+    <div class="mstat-card">
+      <div class="mstat-val" id="p-month-pct" style="color:var(--yl-d)">0%</div>
+      <div class="mstat-lbl">Rata-rata<br>bulan ini</div>
+    </div>
+    <div class="mstat-card">
+      <div class="mstat-val" id="p-total-days">0</div>
+      <div class="mstat-lbl">Total hari<br>direkam</div>
+    </div>
+    <div class="mstat-card">
+      <div class="mstat-val" id="p-total-tasks">0</div>
+      <div class="mstat-lbl">Total task<br>diselesaikan</div>
+    </div>
+  </div>
+
+  <!-- Avg per hari dalam seminggu -->
+  <div class="bar-section">
+    <div class="heat-title" style="margin-bottom:10px">Rata-rata Completion per Hari</div>
+    <div class="bar-chart" id="day-bars"></div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────
+const DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+const DAILY = [
+  { id:'p1', block:'pagi',  label:'Stand-up Meeting (15 menit)',     detail:'Kumpulin CS 1, CS Toko, Pramuniaga, dan Editor. Tanya target harian mereka hari ini.' },
+  { id:'p2', block:'pagi',  label:'Cek Dashboard Meta Ads',          detail:'CPL kemarin berapa? Budget yang terpakai? Ada iklan yang harus dimatikan karena boncos?' },
+  { id:'p3', block:'pagi',  label:'Cek Bot Mekari Qontak',           detail:'Pastikan bot berjalan normal. Tidak ada chat yang error atau nyangkut.' },
+  { id:'s1', block:'siang', label:'Inspeksi Chat CS 1 (Kumasindo)',  detail:'Baca 5–10 chat klien terbaru. Jawabnya cepat? Jualan Value (Desain 3D & Garansi 1 Tahun) atau cuma kasih harga?' },
+  { id:'s2', block:'siang', label:'Inspeksi CS & Pramuniaga (Kubah Emas)', detail:'Tanya langsung: "Berapa orang yang beli hari ini? Berapa yang sudah ditawarin sekalian jasa pasang Kumasindo?"' },
+  { id:'s3', block:'siang', label:'Tegur / Coaching Langsung',       detail:'Ada chat jelek atau Pramuniaga lupa cross-selling? Tegur hari itu juga. Jangan nunggu besok.' },
+  { id:'r1', block:'sore',  label:'Cek Editor',                      detail:'"Bro, konten Reels atau Feed buat hari ini udah up belum?" Pastikan posting tidak bolong.' },
+  { id:'r2', block:'sore',  label:'Cek Pipeline Omzet',              detail:'Tanya Estimator/CS 2: Ada berapa klien yang sudah dapat RAB tapi belum TTD Deal? Bantu pikirkan taktik closing.' },
+];
+
+const WEEKLY = {
+  2: [{ id:'w_sel', label:'A/B Testing & Aset Digital',   detail:'Buka Landing Page — cek teks yang bisa lebih nendang. Cek Google My Business (GMB), balas review Kubah Emas.' }],
+  3: [{ id:'w_rab', label:'Brainstorming Konten',         detail:'Duduk 1 jam bareng Editor. Bikin Content Calendar minggu depan. Tentukan Angle (misal: edukasi "Pekewuh Sama Tukang Kenalan").' }],
+  4: [{ id:'w_kam', label:'Database Mining & Outbound',   detail:'Buka data pembeli lama Kubah Emas. Siapkan copywriting Broadcast Message promo jasa Kumasindo. Atau jadwalkan kunjungan ke developer.' }],
+  6: [{ id:'w_sab', label:'Weekly Recap & 1-on-1',        detail:'Rekap omzet minggu ini (Toko + Jasa). Capai target? Panggil anggota tim yang performanya kendor untuk coaching santai.' }],
+};
+
+const MONTHLY = [
+  { id:'m1', label:'Hitung CAC (Customer Acquisition Cost)', detail:'Total biaya Ads sebulan ÷ jumlah Deal. Masih sehat angkanya?' },
+  { id:'m2', label:'Hitung Omzet vs Target',                 detail:'Bikin report selembar untuk CEO: spend iklan X juta, Toko omzet Y juta, Kumasindo omzet Z juta.' },
+  { id:'m3', label:'Evaluasi Promo / Campaign',              detail:'Promo bulan ini efektif? Kalau tidak, bulan depan ganti promo apa?' },
+];
+
+const EMERGENCY = [
+  'Jangan pernah balas chat klien pakai akun CS, kecuali untuk mencontohkan cara closing (lalu kembalikan ke CS).',
+  'Jangan pernah edit video di Premiere/Capcut. Tugas Editor. Kamu hanya kasih ide dan briefing.',
+  'Jangan turun ke lapangan cek progress plafon atau jam datang tukang. Itu urusan PM kamu.',
+];
+
+const BLOCKS = {
+  pagi:  { label:'☀️ Pagi — Ignition & Traffic',    time:'08.00 – 10.00' },
+  siang: { label:'⚡ Siang — Conversion & QC',       time:'11.00 – 14.00' },
+  sore:  { label:'🎯 Sore — Creative & Pipeline',    time:'15.00 – 16.00' },
+};
+
+// ── STORAGE ───────────────────────────────────────────
+const SK = { daily:'mm_daily_', monthly:'mm_monthly_', streak:'mm_streak', history:'mm_history' };
+
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function monthKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function ls(k,def){ try{ const v=localStorage.getItem(k); return v!==null?JSON.parse(v):def; }catch(e){ return def; } }
+function ss(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} scheduleSync(); }
+
+// ── CLOUD BACKUP (Google Sheets via Apps Script) ───────
+// URL dan TOKEN tertanam permanen di file ini (bukan di HP), jadi
+// walaupun HP di-clear cache/reset total, app tetap tau alamat
+// backup-nya. Ganti 2 nilai di bawah SEBELUM upload ke GitHub.
+var CLOUD_CONFIG={
+  url:'https://script.google.com/macros/s/AKfycbwBSg6LsQ4EjvZw-127A-faGKTCOxDNtthWiJgjJH1JukED5EW64PU_3cAIwLtSXvo/exec',
+  token:'managermarketing'
+};
+var CLOUD_URL_KEY='mm_cloud_url', CLOUD_TOKEN_KEY='mm_cloud_token', CLOUD_LAST_KEY='mm_cloud_last_sync';
+function getCloudUrl(){
+  var v=localStorage.getItem(CLOUD_URL_KEY);
+  if(v)return v;
+  return (CLOUD_CONFIG.url&&CLOUD_CONFIG.url.indexOf('GANTI_')!==0)?CLOUD_CONFIG.url:'';
+}
+function getCloudToken(){
+  var v=localStorage.getItem(CLOUD_TOKEN_KEY);
+  if(v)return v;
+  return (CLOUD_CONFIG.token&&CLOUD_CONFIG.token.indexOf('GANTI_')!==0)?CLOUD_CONFIG.token:'';
+}
+function setCloudLastSync(ts){localStorage.setItem(CLOUD_LAST_KEY,ts);}
+function getCloudLastSync(){return localStorage.getItem(CLOUD_LAST_KEY)||'';}
+function getDeviceId(){
+  var id=localStorage.getItem('mm_device_id');
+  if(!id){id='hp-'+Math.random().toString(36).slice(2,8);localStorage.setItem('mm_device_id',id);}
+  return id;
+}
+// Sapu semua key 'mm_' di localStorage (kecuali pengaturan cloud & device id
+// sendiri) — ini otomatis nyangkut semua data harian/bulanan meski key-nya
+// beda-beda per tanggal, gak perlu didaftar manual satu-satu.
+var CLOUD_EXCLUDE=['mm_cloud_url','mm_cloud_token','mm_cloud_last_sync','mm_device_id'];
+function collectAllData(){
+  var data={};
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k.indexOf('mm_')===0 && CLOUD_EXCLUDE.indexOf(k)===-1){
+      data[k]=localStorage.getItem(k);
+    }
+  }
+  return data;
+}
+function applyCloudData_(data){
+  Object.keys(data).forEach(function(k){
+    if(k.indexOf('mm_')===0 && CLOUD_EXCLUDE.indexOf(k)===-1){
+      localStorage.setItem(k,data[k]);
+    }
+  });
+}
+var _syncTimer=null;
+function scheduleSync(){
+  if(!getCloudUrl())return;
+  if(_syncTimer)clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(function(){syncToCloud(false);},3000);
+}
+function syncToCloud(manual){
+  var url=getCloudUrl();
+  if(!url){if(manual)alert('Cloud Backup belum aktif.');return;}
+  var payload={token:getCloudToken(),device:getDeviceId(),data:collectAllData()};
+  fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res.ok){setCloudLastSync(new Date().toISOString());if(manual){alert('✅ Backup ke cloud berhasil.');renderSettings();}}
+      else if(manual){alert('❌ Gagal backup: '+(res.error||'unknown error'));}
+    })
+    .catch(function(err){if(manual)alert('❌ Gagal konek ke cloud: '+err);});
+}
+function restoreFromCloud(manual){
+  var url=getCloudUrl();
+  if(!url){if(manual)alert('Cloud Backup belum aktif.');return;}
+  fetch(url+'?token='+encodeURIComponent(getCloudToken()))
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res.ok){if(manual)alert('❌ '+(res.error||'Gagal ambil backup.'));return;}
+      var doApply=function(){
+        applyCloudData_(res.data);
+        setCloudLastSync(res.timestamp);
+        location.reload();
+      };
+      if(manual){
+        if(confirm('Timpa data di HP ini dengan backup cloud tanggal '+new Date(res.timestamp).toLocaleString('id-ID')+'?'))doApply();
+      }else{doApply();}
+    })
+    .catch(function(err){if(manual)alert('❌ Gagal konek ke cloud: '+err);});
+}
+function checkAndRestoreOnBoot(){
+  var url=getCloudUrl();
+  if(!url)return;
+  var hasLocalData=Object.keys(collectAllData()).length>0;
+  if(hasLocalData)return;
+  fetch(url+'?token='+encodeURIComponent(getCloudToken()))
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res.ok)return;
+      if(confirm('Data di HP ini kosong, tapi ada backup di cloud (tanggal '+new Date(res.timestamp).toLocaleString('id-ID')+').\n\nPulihkan sekarang?')){
+        applyCloudData_(res.data);
+        setCloudLastSync(res.timestamp);
+        location.reload();
+      }
+    })
+    .catch(function(){});
+}
+function importDataFile(input){
+  var file=input.files&&input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var d=JSON.parse(e.target.result);
+      if(!confirm('Timpa semua data di HP ini dengan isi file backup ini?'))return;
+      applyCloudData_(d);
+      alert('✅ Data berhasil dipulihkan dari file.');
+      location.reload();
+    }catch(err){alert('❌ File tidak valid: '+err);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+function exportDataFile(){
+  var data=collectAllData();
+  var bl=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);
+  a.download='mm-daily-backup-'+todayKey()+'.json';
+  a.click();
+}
+
+function getDailyChecked(){ return ls(SK.daily+todayKey(), []); }
+function setDailyChecked(arr){ ss(SK.daily+todayKey(), arr); }
+function getMonthlyChecked(){ return ls(SK.monthly+monthKey(), []); }
+function setMonthlyChecked(arr){ ss(SK.monthly+monthKey(), arr); }
+function getStreak(){ return ls(SK.streak, {count:0, last:''}); }
+function setStreak(obj){ ss(SK.streak, obj); }
+function getHistory(){ return ls(SK.history, []); }
+function setHistory(arr){ ss(SK.history, arr); }
+
+// ── STATE ─────────────────────────────────────────────
+let todayDay = new Date().getDay(); // 0=Sun
+let todayTasks = []; // daily + weekly for today
+let checked = [];
+let monthlyChecked = [];
+let celebrateFired = false;
+let monthlyOpen = false;
+let historyOpen = false;
+
+function getTodayTasks(){
+  const weekly = WEEKLY[todayDay] || [];
+  return [...DAILY, ...weekly];
+}
+
+function initState(){
+  todayTasks = getTodayTasks();
+  checked = getDailyChecked();
+  monthlyChecked = getMonthlyChecked();
+  celebrateFired = (checked.length === todayTasks.length && todayTasks.length > 0 && ls('mm_cele_'+todayKey(), false));
+}
+
+// ── STREAK LOGIC ─────────────────────────────────────
+function updateStreak(allDone){
+  if(!allDone) return;
+  const tk = todayKey();
+  const st = getStreak();
+  if(st.last === tk) return; // already counted today
+
+  // Check if yesterday was complete (or Sunday skip)
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const ydKey = yesterday.getFullYear()+'-'+String(yesterday.getMonth()+1).padStart(2,'0')+'-'+String(yesterday.getDate()).padStart(2,'0');
+  const ydDay = yesterday.getDay();
+
+  let newCount = 1;
+  if(st.last === ydKey){ newCount = st.count + 1; } // consecutive
+  else if(ydDay === 0 && st.count > 0){ // yesterday was Sunday
+    const dayBefore = new Date(); dayBefore.setDate(dayBefore.getDate()-2);
+    const dbKey = dayBefore.getFullYear()+'-'+String(dayBefore.getMonth()+1).padStart(2,'0')+'-'+String(dayBefore.getDate()).padStart(2,'0');
+    if(st.last === dbKey) newCount = st.count + 1;
+  }
+  setStreak({count:newCount, last:tk});
+
+  // Save history
+  const hist = getHistory().filter(h => h.date !== tk);
+  hist.push({date:tk, pct:100, done:todayTasks.length, total:todayTasks.length});
+  setHistory(hist.slice(-60));
+}
+
+function saveProgress(){
+  const total = todayTasks.length;
+  const done = checked.length;
+  const pct = total>0?Math.round(done/total*100):0;
+  const tk = todayKey();
+  const hist = getHistory().filter(h => h.date !== tk);
+  hist.push({date:tk, pct, done, total});
+  setHistory(hist.slice(-60));
+}
+
+// ── RENDER ────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderGreeting(){
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h<11?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam';
+  const day = DAYS[now.getDay()];
+  const date = now.getDate();
+  const month = MONTHS[now.getMonth()];
+  const year = now.getFullYear();
+  document.getElementById('greeting-date').textContent = `${day}, ${date} ${month} ${year}`;
+  document.getElementById('greeting-msg').innerHTML = `${greeting}, <span>Manager!</span>`;
+}
+
+function renderProgress(){
+  const total = todayTasks.length;
+  const done = checked.length;
+  const pct = total>0?Math.round(done/total*100):0;
+  const circ = 2*Math.PI*46; // r=46 → 289
+
+  document.getElementById('ring-pct').textContent = pct+'%';
+  document.getElementById('ring-sub').textContent = done+' / '+total;
+  document.getElementById('ring-fg').style.strokeDashoffset = circ*(1-pct/100);
+
+  const st = getStreak();
+  document.getElementById('streak-text').textContent = st.count+' hari berturut-turut';
+  document.getElementById('rest-streak-text').textContent = '🔥 '+st.count+' hari streak';
+
+  if(pct===100){
+    document.getElementById('hero-title').textContent = 'Hari ini sempurna! 🏆';
+    document.getElementById('hero-desc').textContent = 'Semua task selesai. Kamu jaga streak ini dengan luar biasa.';
+    document.getElementById('all-done-msg').style.display = 'block';
+    if(!celebrateFired){ triggerCelebrate(); celebrateFired=true; ss('mm_cele_'+todayKey(),true); }
+    updateStreak(true);
+  } else if(pct>=70){
+    document.getElementById('hero-title').textContent = 'Hampir selesai! 💪';
+    document.getElementById('hero-desc').textContent = (total-done)+' task lagi untuk hari yang sempurna.';
+    document.getElementById('all-done-msg').style.display = 'none';
+  } else if(pct>0){
+    document.getElementById('hero-title').textContent = 'Baru mulai, terus!';
+    document.getElementById('hero-desc').textContent = 'Selesaikan semua task untuk menjaga streak kamu.';
+    document.getElementById('all-done-msg').style.display = 'none';
+  } else {
+    document.getElementById('hero-title').textContent = 'Mulai hari ini!';
+    document.getElementById('hero-desc').textContent = 'Centang task pertama kamu dan jaga streak berjalan.';
+    document.getElementById('all-done-msg').style.display = 'none';
+  }
+}
+
+function renderTasks(){
+  const byBlock = { pagi:[], siang:[], sore:[] };
+  const weeklyItems = [];
+
+  DAILY.forEach(t => byBlock[t.block].push(t));
+  const wt = WEEKLY[todayDay] || [];
+  wt.forEach(t => weeklyItems.push(t));
+
+  let html = '';
+
+  // Daily blocks
+  Object.entries(BLOCKS).forEach(([blockId, blockInfo]) => {
+    const tasks = byBlock[blockId];
+    if(!tasks.length) return;
+    const doneCt = tasks.filter(t => checked.includes(t.id)).length;
+    const badgeCls = doneCt===tasks.length?'done':doneCt>0?'partial':'empty';
+    html += `<div class="section">
+      <div class="sec-head">
+        <span class="sec-ico">${blockInfo.label.split(' ')[0]}</span>
+        <div>
+          <div class="sec-title">${blockInfo.label.replace(/^..\s/,'')}</div>
+          <div style="font-size:10px;color:var(--mut);margin-top:1px">${blockInfo.time}</div>
+        </div>
+        <span class="sec-badge ${badgeCls}">${doneCt}/${tasks.length}</span>
+      </div>
+      <div class="task-card">`;
+    tasks.forEach(t => {
+      const isDone = checked.includes(t.id);
+      html += taskHTML(t, isDone, false);
+    });
+    html += `</div></div>`;
+  });
+
+  // Weekly block (if applicable)
+  if(weeklyItems.length){
+    const doneCt = weeklyItems.filter(t => checked.includes(t.id)).length;
+    const badgeCls = doneCt===weeklyItems.length?'done':doneCt>0?'partial':'empty';
+    html += `<div class="section">
+      <div class="sec-head">
+        <span class="sec-ico">📅</span>
+        <div>
+          <div class="sec-title">Weekly Task — ${DAYS[todayDay]}</div>
+          <div style="font-size:10px;color:var(--mut);margin-top:1px">Deep work jam kosong</div>
+        </div>
+        <span class="sec-badge ${badgeCls}">${doneCt}/${weeklyItems.length}</span>
+      </div>
+      <div class="task-card">`;
+    weeklyItems.forEach(t => {
+      const isDone = checked.includes(t.id);
+      html += taskHTML(t, isDone, true);
+    });
+    html += `</div></div>`;
+  }
+
+  // Monthly
+  const mDone = MONTHLY.filter(t => monthlyChecked.includes(t.id)).length;
+  const mBadgeCls = mDone===MONTHLY.length?'done':mDone>0?'partial':'empty';
+  html += `<div class="section">
+    <div class="task-card ${monthlyOpen?'monthly-open':''}">
+      <div class="monthly-toggle" onclick="toggleMonthly()">
+        <span style="font-size:15px">📈</span>
+        <span class="monthly-toggle-label">Checklist Bulanan</span>
+        <span class="sec-badge ${mBadgeCls}" style="margin-right:8px">${mDone}/${MONTHLY.length}</span>
+        <span class="monthly-toggle-ico">▾</span>
+      </div>
+      <div class="monthly-prog" style="margin:0 15px 8px"><div class="monthly-prog-fill" style="width:${Math.round(mDone/MONTHLY.length*100)}%"></div></div>
+      <div class="monthly-body">`;
+  MONTHLY.forEach(t => {
+    const isDone = monthlyChecked.includes(t.id);
+    html += monthlyTaskHTML(t, isDone);
+  });
+  html += `</div></div></div>`;
+
+  // Emergency
+  html += `<div class="emergency">
+    <div class="emergency-head">
+      <span style="font-size:16px">🚨</span>
+      <span class="emergency-title">Emergency Rules — Haram Hukumnya</span>
+    </div>`;
+  EMERGENCY.forEach(rule => {
+    html += `<div class="emergency-item">${esc(rule)}</div>`;
+  });
+  html += `</div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function taskHTML(t, isDone, isWeekly){
+  return `<div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}',false)" data-id="${t.id}">
+    <div class="task-cb">
+      <svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>
+    </div>
+    <div class="task-body">
+      ${isWeekly?'<div><span class="weekly-tag">Weekly</span></div>':''}
+      <div class="task-label">${esc(t.label)}</div>
+      <div class="task-detail">${esc(t.detail)}</div>
+    </div>
+    <span class="task-arrow" onclick="event.stopPropagation();expandTask(this)">▾</span>
+  </div>`;
+}
+
+function monthlyTaskHTML(t, isDone){
+  return `<div class="task-item ${isDone?'done':''}" onclick="toggleTask('${t.id}',true)" data-id="${t.id}" style="padding:12px 15px">
+    <div class="task-cb">
+      <svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>
+    </div>
+    <div class="task-body">
+      <div class="task-label">${esc(t.label)}</div>
+      <div class="task-detail">${esc(t.detail)}</div>
+    </div>
+    <span class="task-arrow" onclick="event.stopPropagation();expandTask(this)">▾</span>
+  </div>`;
+}
+
+function renderHistory(){
+  const hist = getHistory().slice(-14).reverse();
+  if(!hist.length){
+    document.getElementById('history-list').innerHTML='<div style="padding:20px;text-align:center;color:var(--mut);font-size:12px">Belum ada riwayat. Mulai centang task hari ini!</div>';
+    return;
+  }
+  const now = todayKey();
+  document.getElementById('history-list').innerHTML = hist.map(h => {
+    const d = new Date(h.date+'T00:00:00');
+    const lbl = h.date===now?'Hari ini':DAYS[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()];
+    const barColor = h.pct===100?'var(--grn)':h.pct>=70?'var(--yl)':'var(--red)';
+    const pctColor = h.pct===100?'var(--grn)':h.pct>=70?'var(--yl-d)':'var(--red)';
+    return `<div class="history-row">
+      <div class="history-date">${lbl}</div>
+      <div class="history-bar-wrap"><div class="history-bar" style="width:${h.pct}%;background:${barColor}"></div></div>
+      <div class="history-pct" style="color:${pctColor}">${h.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ACTIONS ───────────────────────────────────────────
+function toggleTask(id, isMonthly){
+  if(isMonthly){
+    const arr = getMonthlyChecked();
+    const idx = arr.indexOf(id);
+    if(idx>=0) arr.splice(idx,1); else arr.push(id);
+    setMonthlyChecked(arr);
+    monthlyChecked = arr;
+  } else {
+    const arr = getDailyChecked();
+    const idx = arr.indexOf(id);
+    if(idx>=0) arr.splice(idx,1); else arr.push(id);
+    setDailyChecked(arr);
+    checked = arr;
+    saveProgress();
+  }
+  renderTasks();
+  renderProgress();
+}
+
+function expandTask(arrow){
+  const item = arrow.closest('.task-item');
+  item.classList.toggle('expanded');
+}
+
+function toggleMonthly(){
+  monthlyOpen = !monthlyOpen;
+  renderTasks();
+}
+
+// ── CONFETTI ─────────────────────────────────────────
+function triggerCelebrate(){
+  const el = document.getElementById('celebrate');
+  const toast = document.getElementById('celebrate-toast');
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  el.style.display = 'block'; toast.style.display = 'block';
+
+  const colors = ['#F5C518','#C89B00','#1C1E26','#fff','#FFE066','#F0A500'];
+  const pieces = Array.from({length:80},()=>({
+    x: Math.random()*canvas.width,
+    y: Math.random()*-canvas.height*0.5 - 20,
+    w: 7+Math.random()*7, h: 5+Math.random()*5,
+    c: colors[Math.floor(Math.random()*colors.length)],
+    r: Math.random()*Math.PI*2,
+    vy: 3+Math.random()*5, vx: (Math.random()-0.5)*3, vr: (Math.random()-0.5)*0.15,
+  }));
+
+  let frame = 0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+      p.y+=p.vy; p.x+=p.vx; p.r+=p.vr; p.vy+=0.07;
+    });
+    frame++;
+    if(frame<120) requestAnimationFrame(draw);
+    else {
+      el.style.display='none';
+      setTimeout(()=>{ toast.style.display='none'; },1000);
+    }
+  }
+  draw();
+  setTimeout(()=>{ toast.style.display='none'; },3500);
+}
+
+// ── THEME ─────────────────────────────────────────────
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  document.getElementById('btn-theme').textContent = isDark?'☀️':'🌙';
+  localStorage.setItem('mm_theme', isDark?'dark':'light');
+}
+
+// ── PWA ───────────────────────────────────────────────
+// Icon (icon-192.png, icon-512.png) dan manifest.json sekarang file
+// statis di folder yang sama — bukan digambar ulang tiap app dibuka.
+// <link rel="manifest">/"apple-touch-icon" di <head> sudah nunjuk ke situ.
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(r){console.log('[SW] OK',r.scope);})
+      .catch(function(e){console.warn('[SW]',e);});
+  });
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────
+let activeTab = 'checklist';
+
+function switchTab(tab){
+  activeTab = tab;
+  // Main app sections
+  const isChecklist = tab === 'checklist';
+  const sections = ['greeting-block','hero','main-content'];
+  // Toggle checklist content visibility
+  document.getElementById('app').style.display = (isChecklist && dayOfWeek!==0) ? '' : (dayOfWeek===0?'none':'none');
+  if(dayOfWeek !== 0){
+    document.getElementById('app').style.display = isChecklist ? '' : 'none';
+  }
+  document.getElementById('rest-day').style.display = (dayOfWeek===0 && isChecklist) ? 'flex' : 'none';
+  document.getElementById('history-panel').style.display = 'none';
+
+  // Progress tab
+  const pt = document.getElementById('tab-progress');
+  pt.style.display = tab==='progress' ? 'block' : 'none';
+
+  // Nav buttons
+  document.getElementById('nav-checklist').classList.toggle('active', isChecklist);
+  document.getElementById('nav-progress').classList.toggle('active', !isChecklist);
+
+  if(tab==='progress') renderProgressTab();
+}
+
+// ── RENDER PROGRESS TAB ───────────────────────────────
+function renderProgressTab(){
+  const hist = getHistory();
+  const st   = getStreak();
+
+  // Header stats
+  document.getElementById('p-streak-num').textContent = st.count;
+  const perfectDays = hist.filter(h=>h.pct===100).length;
+  const avgPct = hist.length ? Math.round(hist.reduce((s,h)=>s+h.pct,0)/hist.length) : 0;
+  // Compute best streak from history
+  let best=0, run=0, prev=null;
+  [...hist].sort((a,b)=>a.date.localeCompare(b.date)).forEach(h=>{
+    if(h.pct===100){
+      const d=new Date(h.date+'T00:00:00');
+      if(prev){
+        const diff=(d-prev)/864e5;
+        // Allow Sunday gap
+        run = (diff===1||(diff===2&&new Date(prev.getTime()+864e5).getDay()===0)) ? run+1 : 1;
+      } else { run=1; }
+      best=Math.max(best,run); prev=d;
+    } else { run=0; prev=null; }
+  });
+  best = Math.max(best, st.count);
+  document.getElementById('p-best').textContent = best;
+  document.getElementById('p-avg').textContent = avgPct+'%';
+  document.getElementById('p-perfect').textContent = perfectDays;
+
+  // Month stats
+  const ym = monthKey();
+  const mHist = hist.filter(h=>h.date.startsWith(ym));
+  const mDone = mHist.filter(h=>h.pct===100).length;
+  const mAvg  = mHist.length ? Math.round(mHist.reduce((s,h)=>s+h.pct,0)/mHist.length) : 0;
+  const totalTasks = hist.reduce((s,h)=>s+(h.done||0),0);
+  document.getElementById('p-month-done').textContent = mDone;
+  document.getElementById('p-month-pct').textContent  = mAvg+'%';
+  document.getElementById('p-total-days').textContent = hist.length;
+  document.getElementById('p-total-tasks').textContent = totalTasks;
+
+  // Heatmap — 10 weeks (70 days) ending today
+  const today = new Date(); today.setHours(0,0,0,0);
+  const histMap = {};
+  hist.forEach(h=>{ histMap[h.date]=h.pct; });
+  // Start from the most recent Monday
+  const startDay = new Date(today);
+  const dow = startDay.getDay(); // 0=Sun
+  startDay.setDate(startDay.getDate() - (dow===0?6:dow-1) - 63); // go back 9 more weeks
+  const cells = [];
+  for(let i=0;i<70;i++){
+    const d = new Date(startDay); d.setDate(startDay.getDate()+i);
+    const dk = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const isToday = dk===todayKey();
+    const isFuture = d>today;
+    const isSun = d.getDay()===0;
+    const pct = histMap[dk];
+    let cls;
+    if(isFuture){ cls='heat-future'; }
+    else if(isSun){ cls='heat-future'; } // Sunday rest
+    else if(pct===undefined){ cls='heat-0'; }
+    else if(pct===100){ cls='heat-full'; }
+    else if(pct>=70){ cls='heat-high'; }
+    else if(pct>=40){ cls='heat-mid'; }
+    else{ cls='heat-low'; }
+    const border = isToday ? 'outline:2px solid var(--yl);outline-offset:1px' : '';
+    const dayName = DAYS[d.getDay()];
+    const label = isSun?'☀️ Istirahat':(pct!==undefined?`${dayName}, ${d.getDate()} ${MONTHS[d.getMonth()]}: ${pct}%`:(!isFuture?`${dayName}, ${d.getDate()} ${MONTHS[d.getMonth()]}: Belum ada data`:`${dayName}, ${d.getDate()} ${MONTHS[d.getMonth()]}`));
+    cells.push(`<div class="heat-cell ${cls}" style="${border}" title="${label}"></div>`);
+  }
+  document.getElementById('heat-grid').innerHTML = cells.join('');
+
+  // Day-of-week bar chart
+  const dayAvg = [0,0,0,0,0,0,0].map((_,di)=>({sum:0,cnt:0}));
+  hist.forEach(h=>{
+    const d=new Date(h.date+'T00:00:00');
+    const di=d.getDay();
+    dayAvg[di].sum+=h.pct; dayAvg[di].cnt++;
+  });
+  const barDays = [1,2,3,4,5,6]; // Mon-Sat
+  const barLabels = ['Sen','Sel','Rab','Kam','Jum','Sab'];
+  document.getElementById('day-bars').innerHTML = barDays.map((di,i)=>{
+    const avg = dayAvg[di].cnt ? Math.round(dayAvg[di].sum/dayAvg[di].cnt) : 0;
+    const barColor = avg===100?'var(--grn)':avg>=70?'var(--yl)':avg>=40?'#F59E0B':'var(--bdr2)';
+    const textColor = avg>=40?'#1C1E26':'transparent';
+    return`<div class="bar-row">
+      <div class="bar-day">${barLabels[i]}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${Math.max(avg,2)}%;background:${barColor};color:${textColor}">
+          ${avg>=15?avg+'%':''}
+        </div>
+      </div>
+      <div class="bar-pct">${avg>0?avg+'%':'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── HISTORY BTN override (now opens in checklist tab) ────
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+document.getElementById('btn-history').addEventListener('click',function(){
+  const panel = document.getElementById('history-panel');
+  const show = panel.style.display!=='block';
+  panel.style.display = show?'block':'none';
+  document.getElementById('app').style.display = show?'none':(dayOfWeek!==0?'':'none');
+  if(!show && activeTab==='progress') switchTab('progress');
+});
+
+document.getElementById('btn-settings').addEventListener('click',function(){
+  const panel = document.getElementById('settings-panel');
+  const show = panel.style.display!=='block';
+  panel.style.display = show?'block':'none';
+  document.getElementById('app').style.display = show?'none':(dayOfWeek!==0?'':'none');
+  if(show) renderSettings();
+});
+function renderSettings(){
+  var body=document.getElementById('settings-body');
+  var cUrl=getCloudUrl(), cLast=getCloudLastSync(), cEmbedded=(CLOUD_CONFIG.url.indexOf('GANTI_')!==0);
+  var box='padding:12px;border-radius:var(--r);margin-bottom:12px;font-size:12px;line-height:1.6';
+  var btn='width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;margin-bottom:8px';
+  var h='';
+  h+='<div class="task-card" style="padding:14px;margin-bottom:14px">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">☁️ Cloud Backup</div>';
+  if(cEmbedded){
+    h+='<div style="'+box+';background:rgba(76,175,80,.12);color:#2E7D32">✅ Alamat backup sudah ketanam permanen di file app ini. Aman dari clear cache.</div>';
+  }else{
+    h+='<div style="'+box+';background:rgba(255,152,0,.12);color:#E65100">⚠️ Cloud Backup belum diaktifkan di file ini.</div>';
+  }
+  h+='<div style="font-size:11px;color:var(--txt2,#888);margin-bottom:10px">'+(cUrl?(cLast?'Sync terakhir: '+new Date(cLast).toLocaleString('id-ID'):'Belum pernah sync'):'—')+'</div>';
+  h+='<button style="'+btn+'" onclick="syncToCloud(true)">🔄 Sync Sekarang</button>';
+  h+='<button style="'+btn+'" onclick="restoreFromCloud(true)">⬇️ Pulihkan dari Cloud</button>';
+  h+='</div>';
+  h+='<div class="task-card" style="padding:14px">';
+  h+='<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">Backup Manual (File)</div>';
+  h+='<button style="'+btn+'" onclick="exportDataFile()">📤 Export Backup (JSON)</button>';
+  h+='<label style="'+btn+';display:block;text-align:center">📥 Restore dari File<input type="file" accept="application/json" style="display:none" onchange="importDataFile(this)"></label>';
+  h+='</div>';
+  body.innerHTML=h;
+}
+
+
+
+// ── INIT ─────────────────────────────────────────────
+const savedTheme = localStorage.getItem('mm_theme');
+if(savedTheme==='dark'){ document.body.classList.add('dark'); document.getElementById('btn-theme').textContent='☀️'; }
+
+const dayOfWeek = new Date().getDay();
+if(dayOfWeek === 0){
+  // Minggu — rest day
+  document.getElementById('rest-day').style.display='flex';
+  document.getElementById('rest-streak-text').textContent='🔥 '+getStreak().count+' hari streak';
+} else {
+  document.getElementById('app').style.display='';
+  initState();
+  renderGreeting();
+  renderProgress();
+  renderTasks();
+}
+
+// Refresh greeting setiap menit
+setInterval(renderGreeting, 60000);
+
+// Cek apakah data lokal kosong (habis clear cache/reset HP) dan ada cloud backup
+checkAndRestoreOnBoot();
+
+</script>
+</body>
+</html>
