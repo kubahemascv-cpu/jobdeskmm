@@ -198,6 +198,27 @@ body.dark .streak-hero{background:linear-gradient(135deg,#0A0B0F,#131418)}
 .bar-section{padding:0 20px;margin-bottom:20px}
 .bar-chart{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shd);border:1px solid var(--bdr)}
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+
+/* ── NOTES (Catatan Harian) ── */
+.notes-section{padding:0 20px 24px}
+.note-type-btn{flex:1;padding:9px 8px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;transition:all .15s}
+.note-type-btn.active{border-color:var(--yl);background:var(--yl-l);color:var(--ch)}
+body.dark .note-type-btn.active{background:rgba(245,197,24,.15);color:var(--yl)}
+.note-item{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shd);border:1px solid var(--bdr);margin-bottom:8px}
+.note-item.checked{opacity:.55}
+.note-check{flex-shrink:0;width:20px;height:20px;border-radius:6px;border:2px solid var(--bdr2);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.note-check.on{background:var(--grn);border-color:var(--grn);color:#fff;font-size:12px}
+.note-body{flex:1;min-width:0}
+.note-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-bottom:4px}
+.note-badge.problem{background:var(--red-l);color:var(--red)}
+.note-badge.ide{background:var(--yl-l);color:var(--yl-d)}
+body.dark .note-badge.problem{background:rgba(220,38,38,.15)}
+body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
+.note-text{font-size:13px;color:var(--txt);line-height:1.5;word-break:break-word}
+.note-item.checked .note-text{text-decoration:line-through;color:var(--mut)}
+.note-date{font-size:10.5px;color:var(--mut);margin-top:4px}
+.note-del{flex-shrink:0;background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;padding:0 2px;line-height:1}
+.note-empty{text-align:center;padding:24px 16px;color:var(--mut);font-size:12.5px}
 .bar-row:last-child{margin-bottom:0}
 .bar-day{font-size:10.5px;font-weight:600;color:var(--mut);min-width:32px}
 .bar-track{flex:1;height:22px;background:var(--bdr2);border-radius:6px;overflow:hidden;position:relative}
@@ -361,6 +382,20 @@ body.dark .streak-hero{background:linear-gradient(135deg,#0A0B0F,#131418)}
     <div class="bar-chart" id="day-bars"></div>
   </div>
 
+  <!-- Catatan Harian -->
+  <div class="notes-section">
+    <div class="heat-title" style="margin-bottom:10px">📝 Catatan Harian <span id="notes-count-badge"></span></div>
+    <div class="task-card" style="padding:14px;margin-bottom:12px">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button type="button" class="note-type-btn active" id="note-type-problem" onclick="setNoteType('problem')">⚠️ Problem</button>
+        <button type="button" class="note-type-btn" id="note-type-ide" onclick="setNoteType('ide')">💡 Ide</button>
+      </div>
+      <textarea id="note-input" placeholder="Tulis problem tim atau ide yang muncul..." rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card);resize:vertical"></textarea>
+      <button type="button" onclick="addNote()" style="margin-top:8px;width:100%;padding:11px;border-radius:var(--r);border:none;background:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ch);cursor:pointer">+ Tambah Catatan</button>
+    </div>
+    <div id="notes-list"></div>
+  </div>
+
 </div>
 
 <script>
@@ -405,7 +440,7 @@ const BLOCKS = {
 };
 
 // ── STORAGE ───────────────────────────────────────────
-const SK = { daily:'mm_daily_', monthly:'mm_monthly_', streak:'mm_streak', history:'mm_history' };
+const SK = { daily:'mm_daily_', monthly:'mm_monthly_', streak:'mm_streak', history:'mm_history', notes:'mm_notes' };
 
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function monthKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
@@ -606,6 +641,74 @@ function saveProgress(){
 
 // ── RENDER ────────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── CATATAN HARIAN (Problem/Ide untuk rapat mingguan) ──
+let noteType = 'problem';
+function loadNotes(){ return ls(SK.notes, []); }
+function saveNotes(arr){ ss(SK.notes, arr); }
+function setNoteType(t){
+  noteType = t;
+  document.getElementById('note-type-problem').classList.toggle('active', t==='problem');
+  document.getElementById('note-type-ide').classList.toggle('active', t==='ide');
+}
+function addNote(){
+  const input = document.getElementById('note-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const notes = loadNotes();
+  notes.unshift({
+    id: 'n'+Date.now()+Math.random().toString(36).slice(2,6),
+    type: noteType,
+    text: text,
+    date: new Date().toISOString(),
+    checked: false
+  });
+  saveNotes(notes);
+  input.value='';
+  renderNotes();
+}
+function toggleNote(id){
+  const notes = loadNotes();
+  const n = notes.find(x=>x.id===id);
+  if(n) n.checked = !n.checked;
+  saveNotes(notes);
+  renderNotes();
+}
+function deleteNote(id){
+  if(!confirm('Hapus catatan ini?'))return;
+  saveNotes(loadNotes().filter(x=>x.id!==id));
+  renderNotes();
+}
+function renderNotes(){
+  const list = document.getElementById('notes-list');
+  if(!list) return;
+  const notes = loadNotes();
+  const unchecked = notes.filter(n=>!n.checked).length;
+  const badge = document.getElementById('notes-count-badge');
+  if(badge) badge.textContent = unchecked>0 ? '('+unchecked+' belum dibahas)' : '';
+  if(notes.length===0){
+    list.innerHTML = '<div class="note-empty">Belum ada catatan. Tulis problem tim atau ide yang muncul di atas — nanti tinggal dicentang pas rapat mingguan.</div>';
+    return;
+  }
+  // Belum dibahas duluan, baru yang udah dibahas di bawah
+  const sorted = [...notes].sort((a,b)=>{
+    if(a.checked!==b.checked) return a.checked?1:-1;
+    return b.date.localeCompare(a.date);
+  });
+  list.innerHTML = sorted.map(n=>{
+    const d = new Date(n.date);
+    const dateStr = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    return `<div class="note-item ${n.checked?'checked':''}">
+      <div class="note-check ${n.checked?'on':''}" onclick="toggleNote('${n.id}')">${n.checked?'✓':''}</div>
+      <div class="note-body">
+        <span class="note-badge ${n.type}">${n.type==='problem'?'⚠️ Problem':'💡 Ide'}</span>
+        <div class="note-text">${esc(n.text)}</div>
+        <div class="note-date">${dateStr}</div>
+      </div>
+      <button class="note-del" onclick="deleteNote('${n.id}')" title="Hapus">🗑️</button>
+    </div>`;
+  }).join('');
+}
 
 function renderGreeting(){
   const now = new Date();
@@ -994,6 +1097,8 @@ function renderProgressTab(){
       <div class="bar-pct">${avg>0?avg+'%':'—'}</div>
     </div>`;
   }).join('');
+
+  renderNotes();
 }
 
 // ── HISTORY BTN override (now opens in checklist tab) ────
