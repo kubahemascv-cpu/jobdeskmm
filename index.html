@@ -313,6 +313,10 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
     <span class="nav-ico">📊</span>
     <span class="nav-lbl">Progress</span>
   </button>
+  <button class="nav-btn" id="nav-prmanager" onclick="switchTab('prmanager')">
+    <span class="nav-ico">📋</span>
+    <span class="nav-lbl">PR Manager</span>
+  </button>
 </nav>
 
 <!-- PROGRESS TAB -->
@@ -398,6 +402,28 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
 
 </div>
 
+<!-- PR MANAGER TAB -->
+<div class="prog-tab" id="tab-prmanager" style="display:none">
+
+  <div style="padding:16px 20px 4px">
+    <div style="font-size:14px;font-weight:700;color:var(--txt);margin-bottom:2px">📋 PR Manager</div>
+    <div style="font-size:11.5px;color:var(--mut)">Checklist tugas dengan tanggal target — bisa diatur ulang kapan aja.</div>
+  </div>
+
+  <div style="padding:14px 20px">
+    <div class="task-card" style="padding:14px">
+      <textarea id="pr-input" placeholder="Tulis PR / tugas yang perlu dikerjakan..." rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card);resize:vertical;margin-bottom:8px"></textarea>
+      <div style="display:flex;gap:8px">
+        <input type="date" id="pr-date" style="flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card)">
+        <button type="button" onclick="addPR()" style="padding:10px 18px;border-radius:var(--r);border:none;background:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ch);cursor:pointer;white-space:nowrap">+ Tambah PR</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 30px" id="pr-list"></div>
+
+</div>
+
 <script>
 // ── DATA ─────────────────────────────────────────────
 const DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -406,7 +432,7 @@ const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustu
 const DAILY = [
   { id:'p1', block:'pagi',  label:'Stand-up Meeting (15 menit)',     detail:'Kumpulin CS 1, CS Toko, Pramuniaga, dan Editor. Tanya target harian mereka hari ini.' },
   { id:'p2', block:'pagi',  label:'Cek Dashboard Meta Ads',          detail:'CPL kemarin berapa? Budget yang terpakai? Ada iklan yang harus dimatikan karena boncos?' },
-  { id:'p3', block:'pagi',  label:'Cek Bot Mekari Qontak',           detail:'Pastikan bot berjalan normal. Tidak ada chat yang error atau nyangkut.' },
+  { id:'p3', block:'pagi',  label:'Cek Bot WA Business',           detail:'Pastikan bot berjalan normal. Tidak ada chat yang error atau nyangkut.' },
   { id:'s1', block:'siang', label:'Inspeksi Chat CS 1 (Kumasindo)',  detail:'Baca 5–10 chat klien terbaru. Jawabnya cepat? Jualan Value (Desain 3D & Garansi 1 Tahun) atau cuma kasih harga?' },
   { id:'s2', block:'siang', label:'Inspeksi CS & Pramuniaga (Kubah Emas)', detail:'Tanya langsung: "Berapa orang yang beli hari ini? Berapa yang sudah ditawarin sekalian jasa pasang Kumasindo?"' },
   { id:'s3', block:'siang', label:'Tegur / Coaching Langsung',       detail:'Ada chat jelek atau Pramuniaga lupa cross-selling? Tegur hari itu juga. Jangan nunggu besok.' },
@@ -710,6 +736,77 @@ function renderNotes(){
   }).join('');
 }
 
+// ── PR MANAGER (checklist tugas dengan tanggal target) ──
+function loadPR(){ return ls('mm_pr_manager', []); }
+function savePR(arr){ ss('mm_pr_manager', arr); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addPR(){
+  const input = document.getElementById('pr-input');
+  const dateInput = document.getElementById('pr-date');
+  const text = input.value.trim();
+  if(!text) return;
+  const list = loadPR();
+  list.unshift({
+    id: 'pr'+Date.now()+Math.random().toString(36).slice(2,6),
+    text: text,
+    date: dateInput.value || todayStr(),
+    checked: false,
+    createdAt: new Date().toISOString()
+  });
+  savePR(list);
+  input.value=''; dateInput.value='';
+  renderPR();
+}
+function togglePR(id){
+  const list = loadPR();
+  const it = list.find(x=>x.id===id);
+  if(it) it.checked = !it.checked;
+  savePR(list);
+  renderPR();
+}
+function setPRDate(id, val){
+  const list = loadPR();
+  const it = list.find(x=>x.id===id);
+  if(it) it.date = val;
+  savePR(list);
+  renderPR();
+}
+function deletePR(id){
+  if(!confirm('Hapus PR ini?'))return;
+  savePR(loadPR().filter(x=>x.id!==id));
+  renderPR();
+}
+function renderPR(){
+  const list = document.getElementById('pr-list');
+  if(!list) return;
+  const items = loadPR();
+  if(items.length===0){
+    list.innerHTML = '<div class="note-empty">Belum ada PR. Tulis tugas di atas dan atur tanggal targetnya.</div>';
+    return;
+  }
+  const today = todayStr();
+  // Belum selesai duluan (diurutkan tanggal terdekat), yang udah selesai turun ke bawah
+  const sorted = [...items].sort((a,b)=>{
+    if(a.checked!==b.checked) return a.checked?1:-1;
+    return a.date.localeCompare(b.date);
+  });
+  list.innerHTML = sorted.map(function(it){
+    const isOverdue = !it.checked && it.date < today;
+    const isToday = it.date === today;
+    const d = new Date(it.date+'T00:00:00');
+    const dateLabel = isNaN(d) ? '' : d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+    return `<div class="note-item ${it.checked?'checked':''}">
+      <div class="note-check ${it.checked?'on':''}" onclick="togglePR('${it.id}')">${it.checked?'✓':''}</div>
+      <div class="note-body">
+        <span class="note-badge" style="background:${isOverdue?'#FEE2E2':isToday?'#FEF3C7':'#E5E7EB'};color:${isOverdue?'#DC2626':isToday?'#B45309':'#4B5563'}">${isOverdue?'⏰ Lewat target':isToday?'📅 Hari ini':'📅 '+dateLabel}</span>
+        <div class="note-text">${esc(it.text)}</div>
+        <input type="date" value="${it.date}" onchange="setPRDate('${it.id}', this.value)" style="margin-top:6px;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+      </div>
+      <button class="note-del" onclick="deletePR('${it.id}')" title="Hapus">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
 function renderGreeting(){
   const now = new Date();
   const h = now.getHours();
@@ -993,16 +1090,23 @@ function switchTab(tab){
   }
   document.getElementById('rest-day').style.display = (dayOfWeek===0 && isChecklist) ? 'flex' : 'none';
   document.getElementById('history-panel').style.display = 'none';
+  document.getElementById('settings-panel').style.display = 'none';
 
   // Progress tab
   const pt = document.getElementById('tab-progress');
   pt.style.display = tab==='progress' ? 'block' : 'none';
 
+  // PR Manager tab
+  const prt = document.getElementById('tab-prmanager');
+  prt.style.display = tab==='prmanager' ? 'block' : 'none';
+
   // Nav buttons
   document.getElementById('nav-checklist').classList.toggle('active', isChecklist);
-  document.getElementById('nav-progress').classList.toggle('active', !isChecklist);
+  document.getElementById('nav-progress').classList.toggle('active', tab==='progress');
+  document.getElementById('nav-prmanager').classList.toggle('active', tab==='prmanager');
 
   if(tab==='progress') renderProgressTab();
+  if(tab==='prmanager') renderPR();
 }
 
 // ── RENDER PROGRESS TAB ───────────────────────────────
@@ -1107,16 +1211,31 @@ document.getElementById('btn-history').addEventListener('click',function(){
   const panel = document.getElementById('history-panel');
   const show = panel.style.display!=='block';
   panel.style.display = show?'block':'none';
-  document.getElementById('app').style.display = show?'none':(dayOfWeek!==0?'':'none');
-  if(!show && activeTab==='progress') switchTab('progress');
+  if(show){
+    document.getElementById('app').style.display='none';
+    document.getElementById('tab-progress').style.display='none';
+    document.getElementById('tab-prmanager').style.display='none';
+    document.getElementById('rest-day').style.display='none';
+    document.getElementById('settings-panel').style.display='none';
+  } else {
+    switchTab(activeTab);
+  }
 });
 
 document.getElementById('btn-settings').addEventListener('click',function(){
   const panel = document.getElementById('settings-panel');
   const show = panel.style.display!=='block';
   panel.style.display = show?'block':'none';
-  document.getElementById('app').style.display = show?'none':(dayOfWeek!==0?'':'none');
-  if(show) renderSettings();
+  if(show){
+    document.getElementById('app').style.display='none';
+    document.getElementById('tab-progress').style.display='none';
+    document.getElementById('tab-prmanager').style.display='none';
+    document.getElementById('rest-day').style.display='none';
+    document.getElementById('history-panel').style.display='none';
+    renderSettings();
+  } else {
+    switchTab(activeTab);
+  }
 });
 function renderSettings(){
   var body=document.getElementById('settings-body');
