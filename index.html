@@ -795,12 +795,18 @@ function renderPR(){
     const isToday = it.date === today;
     const d = new Date(it.date+'T00:00:00');
     const dateLabel = isNaN(d) ? '' : d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+    const created = it.createdAt ? new Date(it.createdAt) : null;
+    const createdLabel = created ? created.getDate()+' '+MONTHS[created.getMonth()]+' '+created.getFullYear() : '—';
     return `<div class="note-item ${it.checked?'checked':''}">
       <div class="note-check ${it.checked?'on':''}" onclick="togglePR('${it.id}')">${it.checked?'✓':''}</div>
       <div class="note-body">
-        <span class="note-badge" style="background:${isOverdue?'#FEE2E2':isToday?'#FEF3C7':'#E5E7EB'};color:${isOverdue?'#DC2626':isToday?'#B45309':'#4B5563'}">${isOverdue?'⏰ Lewat target':isToday?'📅 Hari ini':'📅 '+dateLabel}</span>
+        <span class="note-badge" style="background:${isOverdue?'#FEE2E2':isToday?'#FEF3C7':'#E5E7EB'};color:${isOverdue?'#DC2626':isToday?'#B45309':'#4B5563'}">${isOverdue?'⏰ Lewat target':isToday?'📅 Target hari ini':'📅 Target: '+dateLabel}</span>
         <div class="note-text">${esc(it.text)}</div>
-        <input type="date" value="${it.date}" onchange="setPRDate('${it.id}', this.value)" style="margin-top:6px;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+        <div class="note-date" style="margin-top:4px">🗓️ Dibuat: ${createdLabel}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+          <span style="font-size:11px;color:var(--mut)">Ubah target:</span>
+          <input type="date" value="${it.date}" onchange="setPRDate('${it.id}', this.value)" style="font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+        </div>
       </div>
       <button class="note-del" onclick="deletePR('${it.id}')" title="Hapus">🗑️</button>
     </div>`;
@@ -1217,6 +1223,7 @@ document.getElementById('btn-history').addEventListener('click',function(){
     document.getElementById('tab-prmanager').style.display='none';
     document.getElementById('rest-day').style.display='none';
     document.getElementById('settings-panel').style.display='none';
+    renderHistory();
   } else {
     switchTab(activeTab);
   }
