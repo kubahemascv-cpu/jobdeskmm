@@ -413,10 +413,17 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
   <div style="padding:14px 20px">
     <div class="task-card" style="padding:14px">
       <textarea id="pr-input" placeholder="Tulis PR / tugas yang perlu dikerjakan..." rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card);resize:vertical;margin-bottom:8px"></textarea>
-      <div style="display:flex;gap:8px">
-        <input type="date" id="pr-date" style="flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card)">
-        <button type="button" onclick="addPR()" style="padding:10px 18px;border-radius:var(--r);border:none;background:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ch);cursor:pointer;white-space:nowrap">+ Tambah PR</button>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1">
+          <label style="font-size:10.5px;color:var(--mut);font-weight:600;display:block;margin-bottom:3px">Tanggal Dibuat</label>
+          <input type="date" id="pr-date-created" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card)">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:10.5px;color:var(--mut);font-weight:600;display:block;margin-bottom:3px">Tanggal Dikerjakan</label>
+          <input type="date" id="pr-date" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card)">
+        </div>
       </div>
+      <button type="button" onclick="addPR()" style="width:100%;padding:10px 18px;border-radius:var(--r);border:none;background:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ch);cursor:pointer">+ Tambah PR</button>
     </div>
   </div>
 
@@ -742,6 +749,7 @@ function savePR(arr){ ss('mm_pr_manager', arr); }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function addPR(){
   const input = document.getElementById('pr-input');
+  const createdInput = document.getElementById('pr-date-created');
   const dateInput = document.getElementById('pr-date');
   const text = input.value.trim();
   if(!text) return;
@@ -749,12 +757,15 @@ function addPR(){
   list.unshift({
     id: 'pr'+Date.now()+Math.random().toString(36).slice(2,6),
     text: text,
+    dateCreated: createdInput.value || todayStr(),
     date: dateInput.value || todayStr(),
     checked: false,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString() // jam pastinya, buat sortir/debug internal
   });
   savePR(list);
-  input.value=''; dateInput.value='';
+  input.value='';
+  createdInput.value = todayStr();
+  dateInput.value='';
   renderPR();
 }
 function togglePR(id){
@@ -768,6 +779,13 @@ function setPRDate(id, val){
   const list = loadPR();
   const it = list.find(x=>x.id===id);
   if(it) it.date = val;
+  savePR(list);
+  renderPR();
+}
+function setPRDateCreated(id, val){
+  const list = loadPR();
+  const it = list.find(x=>x.id===id);
+  if(it) it.dateCreated = val;
   savePR(list);
   renderPR();
 }
@@ -795,17 +813,22 @@ function renderPR(){
     const isToday = it.date === today;
     const d = new Date(it.date+'T00:00:00');
     const dateLabel = isNaN(d) ? '' : d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
-    const created = it.createdAt ? new Date(it.createdAt) : null;
-    const createdLabel = created ? created.getDate()+' '+MONTHS[created.getMonth()]+' '+created.getFullYear() : '—';
+    // Fallback untuk PR lama yang belum punya field dateCreated (dibuat sebelum fitur ini ada)
+    const dateCreated = it.dateCreated || (it.createdAt ? it.createdAt.slice(0,10) : todayStr());
     return `<div class="note-item ${it.checked?'checked':''}">
       <div class="note-check ${it.checked?'on':''}" onclick="togglePR('${it.id}')">${it.checked?'✓':''}</div>
       <div class="note-body">
         <span class="note-badge" style="background:${isOverdue?'#FEE2E2':isToday?'#FEF3C7':'#E5E7EB'};color:${isOverdue?'#DC2626':isToday?'#B45309':'#4B5563'}">${isOverdue?'⏰ Lewat target':isToday?'📅 Target hari ini':'📅 Target: '+dateLabel}</span>
         <div class="note-text">${esc(it.text)}</div>
-        <div class="note-date" style="margin-top:4px">🗓️ Dibuat: ${createdLabel}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-          <span style="font-size:11px;color:var(--mut)">Ubah target:</span>
-          <input type="date" value="${it.date}" onchange="setPRDate('${it.id}', this.value)" style="font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px">
+          <div>
+            <span style="font-size:10.5px;color:var(--mut);display:block;margin-bottom:2px">Dibuat</span>
+            <input type="date" value="${dateCreated}" onchange="setPRDateCreated('${it.id}', this.value)" style="font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+          </div>
+          <div>
+            <span style="font-size:10.5px;color:var(--mut);display:block;margin-bottom:2px">Dikerjakan</span>
+            <input type="date" value="${it.date}" onchange="setPRDate('${it.id}', this.value)" style="font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:4px 6px;font-family:var(--font);color:var(--txt);background:var(--card)">
+          </div>
         </div>
       </div>
       <button class="note-del" onclick="deletePR('${it.id}')" title="Hapus">🗑️</button>
@@ -1290,6 +1313,10 @@ if(dayOfWeek === 0){
 
 // Refresh greeting setiap menit
 setInterval(renderGreeting, 60000);
+
+// Default "Tanggal Dibuat" di form PR Manager = hari ini
+var prDateCreatedEl = document.getElementById('pr-date-created');
+if(prDateCreatedEl) prDateCreatedEl.value = todayStr();
 
 // Cek apakah data lokal kosong (habis clear cache/reset HP) dan ada cloud backup
 checkAndRestoreOnBoot();
