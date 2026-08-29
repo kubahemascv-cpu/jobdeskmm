@@ -317,6 +317,10 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
     <span class="nav-ico">📋</span>
     <span class="nav-lbl">PR Manager</span>
   </button>
+  <button class="nav-btn" id="nav-rencana" onclick="switchTab('rencana')">
+    <span class="nav-ico">🎯</span>
+    <span class="nav-lbl">Rencana</span>
+  </button>
 </nav>
 
 <!-- PROGRESS TAB -->
@@ -429,6 +433,56 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
 
   <div style="padding:0 20px 30px" id="pr-list"></div>
 
+</div>
+
+<!-- RENCANA KERJA TAB -->
+<div class="prog-tab" id="tab-rencana" style="display:none">
+
+  <div style="padding:16px 20px 4px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt);margin-bottom:2px">🎯 Rencana Kerja Bulanan</div>
+      <div style="font-size:11.5px;color:var(--mut)">Target yang dilaporkan ke CEO — bukan checklist rutin harian.</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 20px 0;display:flex;align-items:center;justify-content:center;gap:14px">
+    <button type="button" onclick="rkShiftMonth(-1)" style="background:none;border:none;font-size:16px;color:var(--mut);cursor:pointer;padding:4px 8px">◀</button>
+    <div style="font-size:13px;font-weight:700;color:var(--txt)" id="rk-month-label">—</div>
+    <button type="button" onclick="rkShiftMonth(1)" style="background:none;border:none;font-size:16px;color:var(--mut);cursor:pointer;padding:4px 8px">▶</button>
+  </div>
+
+  <div style="padding:14px 20px">
+    <div class="task-card" style="padding:18px;text-align:center">
+      <div style="font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Performa Bulan Ini</div>
+      <div style="font-size:36px;font-weight:800;color:var(--txt);margin-top:4px" id="rk-performance">0%</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:4px" id="rk-comparison"></div>
+      <button type="button" onclick="openCeoSummary()" style="margin-top:12px;padding:9px 16px;border-radius:20px;border:1.5px solid var(--yl-d);background:transparent;font-family:var(--font);font-size:12px;font-weight:700;color:var(--yl-d);cursor:pointer">📄 Lihat Ringkasan buat CEO</button>
+    </div>
+  </div>
+
+  <div id="rk-ideas-section" style="padding:0 20px 14px;display:none">
+    <div class="heat-title" style="margin-bottom:8px">💡 Ide Bulan Lalu — Belum Dijadiin Goal</div>
+    <div id="rk-ideas-list"></div>
+  </div>
+
+  <div style="padding:0 20px 14px" id="rk-add-form-wrap">
+    <div class="task-card" style="padding:14px">
+      <textarea id="rk-judul-input" placeholder="Judul goal... (misal: Turunin CPL Meta Ads jadi di bawah Rp15rb)" rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card);resize:vertical;margin-bottom:8px"></textarea>
+      <textarea id="rk-indikator-input" placeholder="Indikator terpenuhi... (misal: CPL rata-rata bulan ini ≤ Rp15.000)" rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--txt);background:var(--card);resize:vertical;margin-bottom:8px"></textarea>
+      <button type="button" onclick="addRencanaGoal()" style="width:100%;padding:10px 18px;border-radius:var(--r);border:none;background:var(--yl);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ch);cursor:pointer">+ Tambah Goal</button>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 30px" id="rk-list"></div>
+
+</div>
+
+<!-- CEO SUMMARY MODAL -->
+<div id="ceo-summary-overlay" style="display:none;position:fixed;inset:0;background:rgba(28,30,38,.55);z-index:400;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--card);width:100%;max-width:440px;max-height:85vh;overflow-y:auto;border-radius:16px;padding:22px">
+    <div id="ceo-summary-body"></div>
+    <button type="button" onclick="document.getElementById('ceo-summary-overlay').style.display='none'" style="margin-top:16px;width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:13px;font-weight:600;color:var(--txt);cursor:pointer">Tutup</button>
+  </div>
 </div>
 
 <script>
@@ -836,6 +890,335 @@ function renderPR(){
   }).join('');
 }
 
+// ── RENCANA KERJA BULANAN (target ke CEO, nyambung PR & Catatan Harian) ──
+function loadRencana(){ return ls('mm_rencana', []); }
+function saveRencana(arr){ ss('mm_rencana', arr); }
+
+let rkViewMonth = monthKey();
+
+function monthLabel(bulan){
+  const [y,m] = bulan.split('-').map(Number);
+  return MONTHS[m-1]+' '+y;
+}
+function prevMonthKey(bulan){
+  const [y,m] = bulan.split('-').map(Number);
+  const d = new Date(y, m-2, 1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function rkShiftMonth(delta){
+  const [y,m] = rkViewMonth.split('-').map(Number);
+  const d = new Date(y, m-1+delta, 1);
+  rkViewMonth = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderRencanaTab();
+}
+
+function addRencanaGoal(){
+  const judulEl = document.getElementById('rk-judul-input');
+  const indikatorEl = document.getElementById('rk-indikator-input');
+  const judul = judulEl.value.trim();
+  const indikator = indikatorEl.value.trim();
+  if(!judul) return;
+  const list = loadRencana();
+  list.unshift({
+    id: 'rk'+Date.now()+Math.random().toString(36).slice(2,6),
+    bulan: rkViewMonth,
+    judul: judul,
+    indikator: indikator,
+    progress: 0,
+    selesai: false,
+    linkedPR: [],
+    linkedNotes: [],
+    continuedFromId: null,
+    convertedFromNoteId: null,
+    createdAt: new Date().toISOString()
+  });
+  saveRencana(list);
+  judulEl.value=''; indikatorEl.value='';
+  renderRencanaTab();
+}
+
+function updateRencanaProgress(id, val){
+  const list = loadRencana();
+  const g = list.find(x=>x.id===id);
+  if(!g) return;
+  g.progress = Math.max(0, Math.min(100, Number(val)||0));
+  if(g.progress>=100) g.selesai = true;
+  else if(g.selesai && g.progress<100) g.selesai = false;
+  saveRencana(list);
+  renderRencanaTab();
+}
+
+// Centang "Selesai" di Goal — otomatis nyentang juga PR & Catatan yang
+// ke-link ke goal ini. Ini yang bikin Rencana Kerja beneran nyambung
+// ke 2 tab lain, bukan cuma nampilin data doang.
+function toggleRencanaSelesai(id){
+  const list = loadRencana();
+  const g = list.find(x=>x.id===id);
+  if(!g) return;
+  g.selesai = !g.selesai;
+  if(g.selesai){
+    g.progress = 100;
+    const prList = loadPR();
+    let prChanged=false;
+    g.linkedPR.forEach(function(prId){
+      const it = prList.find(x=>x.id===prId);
+      if(it && !it.checked){ it.checked=true; prChanged=true; }
+    });
+    if(prChanged) savePR(prList);
+
+    const notesList = loadNotes();
+    let notesChanged=false;
+    g.linkedNotes.forEach(function(nId){
+      const it = notesList.find(x=>x.id===nId);
+      if(it && !it.checked){ it.checked=true; notesChanged=true; }
+    });
+    if(notesChanged) saveNotes(notesList);
+  }
+  saveRencana(list);
+  renderRencanaTab();
+}
+
+function deleteRencanaGoal(id){
+  if(!confirm('Hapus goal ini?')) return;
+  saveRencana(loadRencana().filter(x=>x.id!==id));
+  renderRencanaTab();
+}
+
+function linkPRToGoal(goalId, prId){
+  if(!prId) return;
+  const list = loadRencana();
+  const g = list.find(x=>x.id===goalId);
+  if(!g) return;
+  if(!g.linkedPR.includes(prId)) g.linkedPR.push(prId);
+  saveRencana(list);
+  renderRencanaTab();
+}
+function unlinkPRFromGoal(goalId, prId){
+  const list = loadRencana();
+  const g = list.find(x=>x.id===goalId);
+  if(!g) return;
+  g.linkedPR = g.linkedPR.filter(x=>x!==prId);
+  saveRencana(list);
+  renderRencanaTab();
+}
+function linkNoteToGoal(goalId, noteId){
+  if(!noteId) return;
+  const list = loadRencana();
+  const g = list.find(x=>x.id===goalId);
+  if(!g) return;
+  if(!g.linkedNotes.includes(noteId)) g.linkedNotes.push(noteId);
+  saveRencana(list);
+  renderRencanaTab();
+}
+function unlinkNoteFromGoal(goalId, noteId){
+  const list = loadRencana();
+  const g = list.find(x=>x.id===goalId);
+  if(!g) return;
+  g.linkedNotes = g.linkedNotes.filter(x=>x!==noteId);
+  saveRencana(list);
+  renderRencanaTab();
+}
+
+// "Lanjutkan" — bikin entri BARU di bulan berjalan, progress dilanjutin
+// dari terakhir kali (BUKAN reset ke 0). Entri lama tetap apa adanya
+// biar histori performa bulan itu tetap akurat pas di-recall lagi.
+function continueGoalToCurrentMonth(id){
+  const list = loadRencana();
+  const g = list.find(x=>x.id===id);
+  if(!g) return;
+  const cm = monthKey();
+  if(g.bulan===cm) return;
+  list.unshift({
+    id: 'rk'+Date.now()+Math.random().toString(36).slice(2,6),
+    bulan: cm,
+    judul: g.judul,
+    indikator: g.indikator,
+    progress: g.progress,
+    selesai: false,
+    linkedPR: [],
+    linkedNotes: [],
+    continuedFromId: g.id,
+    convertedFromNoteId: null,
+    createdAt: new Date().toISOString()
+  });
+  saveRencana(list);
+  rkViewMonth = cm;
+  renderRencanaTab();
+}
+
+function computeMonthPerformance(bulan){
+  const goals = loadRencana().filter(function(g){ return g.bulan===bulan; });
+  if(!goals.length) return null;
+  return Math.round(goals.reduce(function(s,g){ return s+g.progress; },0)/goals.length);
+}
+
+// Ide dari Catatan Harian BULAN LALU yang belum pernah dijadiin Goal —
+// cuma muncul pas lagi liat bulan berjalan (buat nyusun rencana baru).
+function getUnconvertedIdeas(){
+  const notes = loadNotes().filter(function(n){ return n.type==='ide'; });
+  const goals = loadRencana();
+  const convertedIds = {};
+  goals.forEach(function(g){ if(g.convertedFromNoteId) convertedIds[g.convertedFromNoteId]=true; });
+  const pm = prevMonthKey(rkViewMonth);
+  return notes.filter(function(n){
+    const noteMonth = (n.date||'').slice(0,7);
+    return noteMonth===pm && !convertedIds[n.id] && !n.checked;
+  });
+}
+function convertIdeaToGoal(noteId){
+  const notes = loadNotes();
+  const note = notes.find(function(n){ return n.id===noteId; });
+  if(!note) return;
+  const list = loadRencana();
+  list.unshift({
+    id: 'rk'+Date.now()+Math.random().toString(36).slice(2,6),
+    bulan: rkViewMonth,
+    judul: note.text,
+    indikator: '',
+    progress: 0,
+    selesai: false,
+    linkedPR: [],
+    linkedNotes: [noteId],
+    continuedFromId: null,
+    convertedFromNoteId: noteId,
+    createdAt: new Date().toISOString()
+  });
+  saveRencana(list);
+  renderRencanaTab();
+}
+
+function renderRencanaTab(){
+  document.getElementById('rk-month-label').textContent = monthLabel(rkViewMonth);
+
+  const perf = computeMonthPerformance(rkViewMonth);
+  document.getElementById('rk-performance').textContent = perf===null ? '—' : perf+'%';
+
+  const pm = prevMonthKey(rkViewMonth);
+  const prevPerf = computeMonthPerformance(pm);
+  const cmpEl = document.getElementById('rk-comparison');
+  if(perf!==null && prevPerf!==null){
+    const diff = perf-prevPerf;
+    cmpEl.textContent = diff===0 ? ('Sama kayak bulan lalu ('+prevPerf+'%)') : (diff>0 ? ('▲ Naik '+diff+'% dari bulan lalu ('+prevPerf+'%)') : ('▼ Turun '+Math.abs(diff)+'% dari bulan lalu ('+prevPerf+'%)'));
+    cmpEl.style.color = diff>=0 ? 'var(--grn, #16A34A)' : '#DC2626';
+  } else {
+    cmpEl.textContent = prevPerf!==null ? ('Bulan lalu: '+prevPerf+'%') : '';
+    cmpEl.style.color = 'var(--mut)';
+  }
+
+  const isCurrentMonth = rkViewMonth === monthKey();
+  const ideasSection = document.getElementById('rk-ideas-section');
+  const ideas = isCurrentMonth ? getUnconvertedIdeas() : [];
+  if(ideas.length){
+    ideasSection.style.display = 'block';
+    document.getElementById('rk-ideas-list').innerHTML = ideas.map(function(n){
+      return '<div class="task-card" style="padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">'
+        + '<div style="flex:1;font-size:12.5px;color:var(--txt)">'+esc(n.text)+'</div>'
+        + '<button type="button" onclick="convertIdeaToGoal(\''+n.id+'\')" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:none;background:var(--yl);font-family:var(--font);font-size:11px;font-weight:700;color:var(--ch);cursor:pointer">Jadikan Goal</button>'
+        + '</div>';
+    }).join('');
+  } else {
+    ideasSection.style.display = 'none';
+  }
+
+  document.getElementById('rk-add-form-wrap').style.display = isCurrentMonth ? 'block' : 'none';
+
+  const goals = loadRencana().filter(function(g){ return g.bulan===rkViewMonth; });
+  const listEl = document.getElementById('rk-list');
+  if(!goals.length){
+    listEl.innerHTML = '<div class="note-empty">Belum ada goal buat bulan ini.'+(isCurrentMonth?' Tambahin di atas.':'')+'</div>';
+    return;
+  }
+
+  const allPR = loadPR();
+  const allNotes = loadNotes();
+
+  listEl.innerHTML = goals.map(function(g){
+    const statusLabel = g.selesai ? '🟢 Tercapai' : g.progress>0 ? '🟡 Berjalan' : '🔴 Belum Mulai';
+    const linkedPRItems = g.linkedPR.map(function(id){ return allPR.find(function(p){return p.id===id;}); }).filter(Boolean);
+    const linkedNoteItems = g.linkedNotes.map(function(id){ return allNotes.find(function(n){return n.id===id;}); }).filter(Boolean);
+    const availablePR = allPR.filter(function(p){ return g.linkedPR.indexOf(p.id)===-1; });
+    const availableNotes = allNotes.filter(function(n){ return g.linkedNotes.indexOf(n.id)===-1; });
+    const continuedTag = g.continuedFromId ? '<div style="font-size:10px;color:var(--mut);margin-bottom:4px">↪️ Lanjutan dari bulan sebelumnya</div>' : '';
+    const showContinueBtn = !g.selesai && g.bulan!==monthKey();
+
+    const prChips = linkedPRItems.map(function(p){
+      return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;background:var(--bdr);padding:4px 8px;border-radius:14px;color:var(--txt)">'+(p.checked?'✅':'⬜')+' '+esc(p.text.slice(0,30))+(p.text.length>30?'…':'')+' <span onclick="unlinkPRFromGoal(\''+g.id+'\',\''+p.id+'\')" style="cursor:pointer;color:var(--mut)">✕</span></span>';
+    }).join('') || '<span style="font-size:10.5px;color:var(--mut)">Belum ada</span>';
+
+    const prSelect = availablePR.length ? (
+      '<select onchange="linkPRToGoal(\''+g.id+'\', this.value); this.value=\'\'" style="width:100%;padding:7px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-family:var(--font);font-size:11.5px;color:var(--txt);background:var(--card);margin-bottom:10px">'
+      + '<option value="">+ Link PR...</option>'
+      + availablePR.map(function(p){ return '<option value="'+p.id+'">'+esc(p.text.slice(0,40))+'</option>'; }).join('')
+      + '</select>'
+    ) : '';
+
+    const noteChips = linkedNoteItems.map(function(n){
+      return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;background:var(--bdr);padding:4px 8px;border-radius:14px;color:var(--txt)">'+(n.checked?'✅':(n.type==='problem'?'⚠️':'💡'))+' '+esc(n.text.slice(0,30))+(n.text.length>30?'…':'')+' <span onclick="unlinkNoteFromGoal(\''+g.id+'\',\''+n.id+'\')" style="cursor:pointer;color:var(--mut)">✕</span></span>';
+    }).join('') || '<span style="font-size:10.5px;color:var(--mut)">Belum ada</span>';
+
+    const noteSelect = availableNotes.length ? (
+      '<select onchange="linkNoteToGoal(\''+g.id+'\', this.value); this.value=\'\'" style="width:100%;padding:7px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-family:var(--font);font-size:11.5px;color:var(--txt);background:var(--card);margin-bottom:10px">'
+      + '<option value="">+ Link Catatan...</option>'
+      + availableNotes.map(function(n){ return '<option value="'+n.id+'">'+(n.type==='problem'?'⚠️':'💡')+' '+esc(n.text.slice(0,40))+'</option>'; }).join('')
+      + '</select>'
+    ) : '';
+
+    return '<div class="task-card" style="padding:14px;margin-bottom:12px">'
+      + continuedTag
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">'
+      +   '<div style="font-size:13.5px;font-weight:700;color:var(--txt);flex:1">'+esc(g.judul)+'</div>'
+      +   '<div class="note-check '+(g.selesai?'on':'')+'" onclick="toggleRencanaSelesai(\''+g.id+'\')" title="Tandai Selesai" style="flex-shrink:0">'+(g.selesai?'✓':'')+'</div>'
+      + '</div>'
+      + (g.indikator?('<div style="font-size:11px;color:var(--mut);margin-bottom:10px">📐 '+esc(g.indikator)+'</div>'):'')
+      + '<div style="font-size:10.5px;font-weight:700;color:var(--mut);margin-bottom:4px">'+statusLabel+' — '+g.progress+'%</div>'
+      + '<input type="range" min="0" max="100" value="'+g.progress+'" oninput="updateRencanaProgress(\''+g.id+'\', this.value)" style="width:100%;margin-bottom:10px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">🔗 PR Terkait</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">'+prChips+'</div>'
+      + prSelect
+      + '<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">📝 Catatan Terkait</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">'+noteChips+'</div>'
+      + noteSelect
+      + '<div style="display:flex;gap:8px;margin-top:8px">'
+      +   (showContinueBtn?('<button type="button" onclick="continueGoalToCurrentMonth(\''+g.id+'\')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--yl-d);background:transparent;font-family:var(--font);font-size:11px;font-weight:700;color:var(--yl-d);cursor:pointer">➡️ Lanjutkan ke Bulan Ini</button>'):'')
+      +   '<button type="button" onclick="deleteRencanaGoal(\''+g.id+'\')" style="padding:8px 12px;border-radius:8px;border:none;background:none;color:var(--mut);font-size:11px;cursor:pointer">🗑️</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openCeoSummary(){
+  const goals = loadRencana().filter(function(g){ return g.bulan===rkViewMonth; });
+  const perf = computeMonthPerformance(rkViewMonth);
+  const pm = prevMonthKey(rkViewMonth);
+  const prevPerf = computeMonthPerformance(pm);
+  const allNotes = loadNotes();
+
+  let compareLine = '';
+  if(perf!==null && prevPerf!==null){
+    const diff = perf-prevPerf;
+    compareLine = diff===0 ? ('Sama seperti bulan lalu ('+prevPerf+'%)') : (diff>0?('Naik '+diff+'% dari bulan lalu ('+prevPerf+'%)'):('Turun '+Math.abs(diff)+'% dari bulan lalu ('+prevPerf+'%)'));
+  }
+
+  const goalsHtml = goals.length ? goals.map(function(g){
+    const statusLabel = g.selesai ? '🟢 Tercapai' : g.progress>0 ? '🟡 Berjalan' : '🔴 Belum Mulai';
+    const linkedNoteItems = g.linkedNotes.map(function(id){ return allNotes.find(function(n){return n.id===id;}); }).filter(Boolean);
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--bdr)">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--txt)">'+esc(g.judul)+'</div>'
+      + '<div style="font-size:11px;color:var(--mut);margin:3px 0">'+statusLabel+' — '+g.progress+'%</div>'
+      + (linkedNoteItems.length?('<div style="font-size:10.5px;color:var(--mut);margin-top:4px">'+linkedNoteItems.map(function(n){return '• '+esc(n.text);}).join('<br>')+'</div>'):'')
+      + '</div>';
+  }).join('') : '<div style="font-size:12px;color:var(--mut);padding:10px 0">Belum ada goal bulan ini.</div>';
+
+  document.getElementById('ceo-summary-body').innerHTML =
+    '<div style="font-size:11px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Ringkasan Performa</div>'
+    + '<div style="font-size:15px;font-weight:800;color:var(--txt);margin:2px 0 2px">'+monthLabel(rkViewMonth)+'</div>'
+    + '<div style="font-size:32px;font-weight:800;color:var(--txt)">'+(perf===null?'—':perf+'%')+'</div>'
+    + (compareLine?('<div style="font-size:11.5px;color:var(--mut);margin-bottom:14px">'+compareLine+'</div>'):'<div style="margin-bottom:14px"></div>')
+    + '<div style="font-size:11px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Detail per Goal</div>'
+    + goalsHtml;
+  document.getElementById('ceo-summary-overlay').style.display = 'flex';
+}
+
 function renderGreeting(){
   const now = new Date();
   const h = now.getHours();
@@ -1129,13 +1512,19 @@ function switchTab(tab){
   const prt = document.getElementById('tab-prmanager');
   prt.style.display = tab==='prmanager' ? 'block' : 'none';
 
+  // Rencana Kerja tab
+  const rkt = document.getElementById('tab-rencana');
+  rkt.style.display = tab==='rencana' ? 'block' : 'none';
+
   // Nav buttons
   document.getElementById('nav-checklist').classList.toggle('active', isChecklist);
   document.getElementById('nav-progress').classList.toggle('active', tab==='progress');
   document.getElementById('nav-prmanager').classList.toggle('active', tab==='prmanager');
+  document.getElementById('nav-rencana').classList.toggle('active', tab==='rencana');
 
   if(tab==='progress') renderProgressTab();
   if(tab==='prmanager') renderPR();
+  if(tab==='rencana') renderRencanaTab();
 }
 
 // ── RENDER PROGRESS TAB ───────────────────────────────
@@ -1244,6 +1633,7 @@ document.getElementById('btn-history').addEventListener('click',function(){
     document.getElementById('app').style.display='none';
     document.getElementById('tab-progress').style.display='none';
     document.getElementById('tab-prmanager').style.display='none';
+    document.getElementById('tab-rencana').style.display='none';
     document.getElementById('rest-day').style.display='none';
     document.getElementById('settings-panel').style.display='none';
     renderHistory();
@@ -1260,6 +1650,7 @@ document.getElementById('btn-settings').addEventListener('click',function(){
     document.getElementById('app').style.display='none';
     document.getElementById('tab-progress').style.display='none';
     document.getElementById('tab-prmanager').style.display='none';
+    document.getElementById('tab-rencana').style.display='none';
     document.getElementById('rest-day').style.display='none';
     document.getElementById('history-panel').style.display='none';
     renderSettings();
