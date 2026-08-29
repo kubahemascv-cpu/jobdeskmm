@@ -955,9 +955,24 @@ function toggleRencanaSelesai(id){
   const list = loadRencana();
   const g = list.find(x=>x.id===id);
   if(!g) return;
-  g.selesai = !g.selesai;
-  if(g.selesai){
+
+  if(!g.selesai){
+    // Mau DICENTANG — konfirmasi dulu kalau bakal nyebar ke PR/Catatan,
+    // biar klik gak sengaja gak langsung nyentang semuanya diam-diam.
+    const prCount = g.linkedPR.length;
+    const noteCount = g.linkedNotes.length;
+    if(prCount>0 || noteCount>0){
+      const parts=[];
+      if(prCount>0) parts.push(prCount+' PR');
+      if(noteCount>0) parts.push(noteCount+' Catatan');
+      if(!confirm('Tandai goal ini Selesai?\n\nIni juga otomatis mencentang '+parts.join(' dan ')+' yang ke-link. Lanjut?')) return;
+    }
+    // Simpen progress lama SEBELUM ditimpa 100 — biar bisa dibalikin
+    // kalau ternyata di-uncheck lagi (misal abis kejadian misklik).
+    g.progressBeforeSelesai = g.progress;
+    g.selesai = true;
     g.progress = 100;
+
     const prList = loadPR();
     let prChanged=false;
     g.linkedPR.forEach(function(prId){
@@ -973,6 +988,14 @@ function toggleRencanaSelesai(id){
       if(it && !it.checked){ it.checked=true; notesChanged=true; }
     });
     if(notesChanged) saveNotes(notesList);
+  } else {
+    // Mau DI-UNCHECK — balikin progress ke angka SEBELUM ditandai
+    // Selesai (bukan biarin nyangkut di 100). PR/Catatan yang udah
+    // kecentang SENGAJA gak ikut di-uncheck otomatis — itu fakta
+    // terpisah yang mungkin emang udah beneran selesai di lapangan.
+    g.selesai = false;
+    g.progress = (g.progressBeforeSelesai!==undefined && g.progressBeforeSelesai!==null) ? g.progressBeforeSelesai : g.progress;
+    g.progressBeforeSelesai = null;
   }
   saveRencana(list);
   renderRencanaTab();
