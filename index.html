@@ -227,6 +227,12 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
 
 /* Responsive */
 @media(max-width:380px){.streak-num{font-size:46px}.month-stats{grid-template-columns:repeat(2,1fr)}}
+@media print{
+  .bottom-nav,.topbar,#hist-period,#hist-dl-menu,.btn-row,button{display:none !important}
+  #printHistHeader{display:block !important;margin-bottom:16px}
+  body{background:#fff}
+  .task-card{box-shadow:none !important;border:1px solid #ddd !important}
+}
 </style>
 </head>
 <body>
@@ -287,7 +293,37 @@ body.dark .note-badge.ide{background:rgba(245,197,24,.15)}
 
 <!-- HISTORY PANEL -->
 <div id="history-panel" style="display:none;padding:0 20px 30px">
-  <div style="font-size:14px;font-weight:700;color:var(--txt);padding:16px 0 10px">Riwayat 14 Hari Terakhir</div>
+  <div style="font-size:14px;font-weight:700;color:var(--txt);padding:16px 0 10px">Riwayat Skor Checklist</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <select id="hist-period" onchange="renderHistory()" style="flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:12.5px;color:var(--txt)">
+      <option value="7">7 Hari Terakhir</option>
+      <option value="14" selected>14 Hari Terakhir</option>
+      <option value="30">30 Hari Terakhir</option>
+      <option value="month">Bulan Ini</option>
+      <option value="all">Semua Data Tersimpan</option>
+    </select>
+    <div style="position:relative">
+      <button onclick="toggleHistDlMenu()" style="padding:10px 14px;border-radius:10px;border:none;background:var(--yl);font-family:var(--font);font-size:12.5px;font-weight:700;color:var(--ch);cursor:pointer;white-space:nowrap">⬇ Unduh</button>
+      <div id="hist-dl-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:60;overflow:hidden;min-width:150px">
+        <button onclick="downloadHistCSV()" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-family:var(--font);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer">📊 Unduh CSV/Excel</button>
+        <button onclick="downloadHistPDF()" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-family:var(--font);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer">📄 Unduh PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-card" id="hist-summary" style="margin-bottom:12px;padding:14px"></div>
+
+  <div id="hist-missed-section" style="display:none">
+    <div style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:8px">⚠️ Checklist yang Sering Terlewat</div>
+    <div class="task-card" id="hist-missed-list" style="margin-bottom:16px;padding:14px"></div>
+  </div>
+
+  <div id="printHistHeader" style="display:none">
+    <div style="font-size:16px;font-weight:800;color:#000">Riwayat Skor Checklist — MM Daily</div>
+    <div style="font-size:11px;color:#555;margin-top:3px" id="printHistMeta"></div>
+  </div>
+
   <div class="task-card" id="history-list"></div>
   <button onclick="document.getElementById('history-panel').style.display='none';document.getElementById('app').style.display=''" style="margin-top:14px;width:100%;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card);font-family:var(--font);font-size:13px;font-weight:600;color:var(--txt);cursor:pointer">← Kembali</button>
 </div>
@@ -721,8 +757,12 @@ function saveProgress(){
   const done = checked.length;
   const pct = total>0?Math.round(done/total*100):0;
   const tk = todayKey();
+  // Simpen JUGA task mana aja yang KELEWAT (id+label) — bukan cuma angka
+  // ringkasnya doang. Ini yang bikin bisa dianalisa "task apa yang paling
+  // sering kelewat" dari histori, bukan cuma persentase harian.
+  const missed = todayTasks.filter(t => !checked.includes(t.id)).map(t => ({id:t.id, label:t.label}));
   const hist = getHistory().filter(h => h.date !== tk);
-  hist.push({date:tk, pct, done, total});
+  hist.push({date:tk, pct, done, total, missed});
   setHistory(hist.slice(-60));
 }
 
@@ -1403,13 +1443,78 @@ function monthlyTaskHTML(t, isDone){
   </div>`;
 }
 
+function getHistPeriodRange(){
+  const period = document.getElementById('hist-period').value;
+  const all = getHistory().slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(!all.length) return [];
+  if(period==='all') return all;
+  if(period==='month'){
+    const now = new Date();
+    const prefix = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    return all.filter(h=>h.date.startsWith(prefix));
+  }
+  const n = parseInt(period,10);
+  return all.slice(-n);
+}
+
+// Hitung task apa aja yang paling sering kelewat sepanjang periode
+// terpilih. Entri histori LAMA (sebelum fitur ini ada) gak punya field
+// "missed" — otomatis dilewatin, gak bikin error, cuma gak ikut ke-hitung.
+function computeMissedFrequency(hist){
+  const freq = {};
+  let daysWithData = 0;
+  hist.forEach(function(h){
+    if(!h.missed) return;
+    daysWithData++;
+    h.missed.forEach(function(m){
+      freq[m.label] = (freq[m.label]||0) + 1;
+    });
+  });
+  const list = Object.keys(freq).map(function(label){
+    return { label:label, count:freq[label] };
+  }).sort(function(a,b){ return b.count-a.count; });
+  return { list:list, daysWithData:daysWithData };
+}
+
 function renderHistory(){
-  const hist = getHistory().slice(-14).reverse();
+  const hist = getHistPeriodRange().slice().reverse();
+  const summaryEl = document.getElementById('hist-summary');
   if(!hist.length){
-    document.getElementById('history-list').innerHTML='<div style="padding:20px;text-align:center;color:var(--mut);font-size:12px">Belum ada riwayat. Mulai centang task hari ini!</div>';
+    document.getElementById('history-list').innerHTML='<div style="padding:20px;text-align:center;color:var(--mut);font-size:12px">Belum ada riwayat buat periode ini.</div>';
+    summaryEl.innerHTML = '';
+    document.getElementById('hist-missed-section').style.display = 'none';
     return;
   }
   const now = todayKey();
+  const avgPct = Math.round(hist.reduce((s,h)=>s+h.pct,0)/hist.length);
+  const perfectDays = hist.filter(h=>h.pct===100).length;
+  summaryEl.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <div><b style="font-size:16px;color:var(--txt)">${avgPct}%</b><br><span style="color:var(--mut)">Rata-rata</span></div>
+      <div><b style="font-size:16px;color:var(--txt)">${hist.length}</b><br><span style="color:var(--mut)">Hari Tercatat</span></div>
+      <div><b style="font-size:16px;color:var(--grn)">${perfectDays}</b><br><span style="color:var(--mut)">Hari Sempurna</span></div>
+    </div>`;
+  document.getElementById('printHistMeta').textContent = 'Periode: '+hist[hist.length-1].date+' s/d '+hist[0].date+' • Diunduh '+new Date().toLocaleString('id-ID');
+
+  const missedData = computeMissedFrequency(hist);
+  const missedSection = document.getElementById('hist-missed-section');
+  const missedListEl = document.getElementById('hist-missed-list');
+  if(missedData.list.length){
+    missedSection.style.display = 'block';
+    missedListEl.innerHTML = missedData.list.map(function(m){
+      const rate = Math.round(m.count/missedData.daysWithData*100);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px">
+        <span style="color:var(--txt2);flex:1">${esc(m.label)}</span>
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;margin-left:10px">${m.count}x <span style="color:var(--mut);font-weight:500">(${rate}% hari)</span></span>
+      </div>`;
+    }).join('');
+  } else if(missedData.daysWithData > 0){
+    missedSection.style.display = 'block';
+    missedListEl.innerHTML = '<div style="text-align:center;color:var(--grn);font-size:12px;padding:6px 0">✅ Gak ada yang kelewat sama sekali di periode ini!</div>';
+  } else {
+    missedSection.style.display = 'none';
+  }
+
   document.getElementById('history-list').innerHTML = hist.map(h => {
     const d = new Date(h.date+'T00:00:00');
     const lbl = h.date===now?'Hari ini':DAYS[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()];
@@ -1421,6 +1526,71 @@ function renderHistory(){
       <div class="history-pct" style="color:${pctColor}">${h.pct}%</div>
     </div>`;
   }).join('');
+}
+
+// ── DOWNLOAD RIWAYAT (CSV/Excel & PDF) ─────────────────
+function toggleHistDlMenu(){
+  const m = document.getElementById('hist-dl-menu');
+  m.style.display = m.style.display==='block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('hist-dl-menu');
+  if(!menu) return;
+  const btnArea = e.target.closest('div[style*="position:relative"]');
+  if(!btnArea) menu.style.display = 'none';
+});
+
+function todayFileStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function downloadHistCSV(){
+  document.getElementById('hist-dl-menu').style.display = 'none';
+  const hist = getHistPeriodRange();
+  if(!hist.length){ alert('Gak ada data buat periode ini.'); return; }
+  const q = (s) => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const lines = [];
+  lines.push(q('RIWAYAT SKOR CHECKLIST — MM DAILY'));
+  lines.push(q('Periode')+','+q(hist[0].date+' s/d '+hist[hist.length-1].date));
+  lines.push('');
+
+  lines.push(q('RINGKASAN HARIAN'));
+  lines.push(q('Tanggal')+','+q('Persentase')+','+q('Task Selesai')+','+q('Task Total')+','+q('Task yang Kelewat'));
+  hist.forEach(function(h){
+    const missedLabels = (h.missed||[]).map(function(m){ return m.label; }).join(' | ');
+    lines.push(q(h.date)+','+h.pct+','+(h.done!==undefined?h.done:'')+','+(h.total!==undefined?h.total:'')+','+q(missedLabels));
+  });
+  lines.push('');
+
+  const missedData = computeMissedFrequency(hist);
+  lines.push(q('CHECKLIST YANG SERING TERLEWAT'));
+  lines.push(q('Nama Task')+','+q('Jumlah Kelewat')+','+q('% dari Hari Tercatat'));
+  if(missedData.list.length===0){
+    lines.push(q('Gak ada yang kelewat pada periode ini')+',,');
+  } else {
+    missedData.list.forEach(function(m){
+      const rate = Math.round(m.count/missedData.daysWithData*100);
+      lines.push(q(m.label)+','+m.count+','+q(rate+'%'));
+    });
+  }
+
+  const blob = new Blob(['\uFEFF'+lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Riwayat_MM_Daily_'+todayFileStr()+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadHistPDF(){
+  document.getElementById('hist-dl-menu').style.display = 'none';
+  const hist = getHistPeriodRange();
+  if(!hist.length){ alert('Gak ada data buat periode ini.'); return; }
+  window.print();
 }
 
 // ── ACTIONS ───────────────────────────────────────────
